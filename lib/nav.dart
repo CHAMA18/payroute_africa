@@ -7,7 +7,6 @@ import 'package:payroute_desktop/pages/cards_page.dart';
 import 'package:payroute_desktop/pages/settings_page.dart';
 import 'package:payroute_desktop/pages/create_account_page.dart';
 import 'package:payroute_desktop/pages/select_account_type_page.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 

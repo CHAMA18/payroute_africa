@@ -114,7 +114,7 @@ class _FinRouteMobileTopBar extends StatelessWidget {
         children: [
           IconButton(
             onPressed: () => Scaffold.of(context).openDrawer(),
-            style: const ButtonStyle(overlayColor: MaterialStatePropertyAll(Colors.transparent)),
+            style: const ButtonStyle(overlayColor: WidgetStatePropertyAll(Colors.transparent)),
             icon: Icon(Icons.menu, color: DashboardPalette.iconMuted(b)),
           ),
           const SizedBox(width: 4),

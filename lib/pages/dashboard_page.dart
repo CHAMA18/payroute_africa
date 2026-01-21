@@ -42,7 +42,7 @@ class _DashboardPageState extends State<DashboardPage> {
       mobileActions: [
         IconButton(
           onPressed: () => _showQuickActionsModal(context, brightness: b),
-          style: const ButtonStyle(overlayColor: MaterialStatePropertyAll(Colors.transparent)),
+          style: const ButtonStyle(overlayColor: WidgetStatePropertyAll(Colors.transparent)),
           icon: const Icon(Icons.bolt, color: PayRouteColors.dashboardPrimary),
           tooltip: 'Quick actions',
         ),
