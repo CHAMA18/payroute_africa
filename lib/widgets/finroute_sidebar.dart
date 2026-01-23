@@ -95,6 +95,12 @@ class FinRouteSidebar extends StatelessWidget {
                       selected: selectedLabel == 'Settings',
                       onTap: () => context.go(AppRoutes.settings),
                     ),
+                    FinRouteNavItem(
+                      label: 'Logout',
+                      icon: Icons.logout,
+                      selected: selectedLabel == 'Logout',
+                      onTap: () => context.go(AppRoutes.login),
+                    ),
                   ],
                 ),
               ),

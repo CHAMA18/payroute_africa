@@ -46,80 +46,84 @@ class _SelectAccountTypePageState extends State<SelectAccountTypePage> {
     return Scaffold(
       backgroundColor: PayRouteColors.noirDark,
       body: Stack(
+        fit: StackFit.expand,
         children: [
           const _NoirMeshBackdrop(),
-          SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-                  child: _Header(onBack: _returnToWelcome),
-                ),
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.topCenter,
+          Positioned.fill(
+            child: SafeArea(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+                    child: _Header(onBack: _returnToWelcome),
+                  ),
+                  Expanded(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 1120),
-                        child: Column(
-                          children: [
-                            const SizedBox(height: 20),
-                            _StepIntro(),
-                            const SizedBox(height: 44),
-                            LayoutBuilder(
-                              builder: (context, constraints) {
-                                final isNarrow = constraints.maxWidth < 860;
-                                final cards = [
-                                  Expanded(
-                                    child: AccountTypeCard(
-                                      title: 'Personal Account',
-                                      description:
-                                          'An elite dashboard for individuals seeking seamless multi-rail routing. Send and receive funds across borders with localized efficiency and institutional-grade security.',
-                                      icon: Icons.person,
-                                      active: _selected == AccountType.personal,
-                                      bullets: const ['Cross-border P2P transfers', 'Smart asset management'],
-                                      onTap: () => setState(() => _selected = AccountType.personal),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 20, height: 20),
-                                  Expanded(
-                                    child: AccountTypeCard(
-                                      title: 'Organization',
-                                      description:
-                                          'Scale your enterprise with our robust API-first architecture. Automated treasury management, bulk payouts, and deep liquidity across the African continent.',
-                                      icon: Icons.corporate_fare,
-                                      active: _selected == AccountType.organization,
-                                      bullets: const ['Full API & Webhook Access', 'Multi-user Treasury Controls'],
-                                      onTap: () => setState(() => _selected = AccountType.organization),
-                                    ),
-                                  ),
-                                ];
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 1120),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const SizedBox(height: 20),
+                              _StepIntro(),
+                              const SizedBox(height: 44),
+                              LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final isNarrow = constraints.maxWidth < 860;
+                                  final personalCard = AccountTypeCard(
+                                    title: 'Personal Account',
+                                    description:
+                                        'An elite dashboard for individuals seeking seamless multi-rail routing. Send and receive funds across borders with localized efficiency and institutional-grade security.',
+                                    icon: Icons.person,
+                                    active: _selected == AccountType.personal,
+                                    bullets: const ['Cross-border P2P transfers', 'Smart asset management'],
+                                    onTap: () => setState(() => _selected = AccountType.personal),
+                                  );
+                                  final organizationCard = AccountTypeCard(
+                                    title: 'Organization',
+                                    description:
+                                        'Scale your enterprise with our robust API-first architecture. Automated treasury management, bulk payouts, and deep liquidity across the African continent.',
+                                    icon: Icons.corporate_fare,
+                                    active: _selected == AccountType.organization,
+                                    bullets: const ['Full API & Webhook Access', 'Multi-user Treasury Controls'],
+                                    onTap: () => setState(() => _selected = AccountType.organization),
+                                  );
 
-                                if (isNarrow) {
-                                  return Column(
+                                  if (isNarrow) {
+                                    return Column(
+                                      children: [
+                                        personalCard,
+                                        const SizedBox(height: 20),
+                                        organizationCard,
+                                      ],
+                                    );
+                                  }
+
+                                  return Row(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
                                     children: [
-                                      cards[0],
-                                      const SizedBox(height: 20),
-                                      cards[2],
+                                      Expanded(child: personalCard),
+                                      const SizedBox(width: 20),
+                                      Expanded(child: organizationCard),
                                     ],
                                   );
-                                }
-
-                                return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: cards);
-                              },
-                            ),
-                            const SizedBox(height: 32),
-                            _BottomPanel(onContinue: _continue),
-                            const SizedBox(height: 16),
-                          ],
+                                },
+                              ),
+                              const SizedBox(height: 32),
+                              _BottomPanel(onContinue: _continue),
+                              const SizedBox(height: 16),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                const _Footer(),
-              ],
+                  const _Footer(),
+                ],
+              ),
             ),
           ),
         ],

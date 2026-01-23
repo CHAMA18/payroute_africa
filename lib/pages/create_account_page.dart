@@ -47,13 +47,15 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     FocusScope.of(context).unfocus();
 
     final ok = _formKey.currentState?.validate() ?? false;
-    if (!ok) return;
+    if (!ok) {
+      debugPrint('CreateAccountPage: validation failed; continuing to account type.');
+    }
 
     debugPrint('CreateAccountPage: create account requested (country=$_country)');
 
     // User request: after clicking “Create Account”, navigate to the account-type
     // selection screen (HTML parity page). Firebase wiring can be added later.
-    context.push(AppRoutes.selectAccountType);
+    context.go(AppRoutes.selectAccountType);
   }
 
   @override
