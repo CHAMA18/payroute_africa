@@ -328,7 +328,10 @@ class _GlassPanel extends StatelessWidget {
   final Widget child;
   final EdgeInsets padding;
 
-  const _GlassPanel({required this.child});
+  const _GlassPanel({
+    required this.child,
+    this.padding = const EdgeInsets.all(24),
+  });
 
   @override
   Widget build(BuildContext context) {
