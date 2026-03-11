@@ -1,19 +1,25 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:payroute_desktop/nav.dart';
 import 'package:payroute_desktop/theme.dart';
 import 'package:payroute_desktop/country_data.dart';
+import 'package:payroute_desktop/models/account_type.dart';
+import 'package:payroute_desktop/providers/auth_provider.dart';
 
 class CreateAccountPage extends StatefulWidget {
-  const CreateAccountPage({super.key});
+  final AccountType accountType;
+  
+  const CreateAccountPage({super.key, required this.accountType});
 
   @override
   State<CreateAccountPage> createState() => _CreateAccountPageState();
 }
 
-class _CreateAccountPageState extends State<CreateAccountPage> {
+class _CreateAccountPageState extends State<CreateAccountPage> with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -22,6 +28,87 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
   bool _isPasswordVisible = false;
   String _country = 'NG';
+  
+  // Animation controllers
+  late AnimationController _breatheController;
+  late AnimationController _scanController;
+  late AnimationController _twinkleController;
+  late AnimationController _floatController;
+  late AnimationController _particleController;
+  late AnimationController _auroraController;
+  late AnimationController _pulseController;
+  late AnimationController _waveController;
+  
+  final List<_CreateAccountParticle> _particles = [];
+  final List<_CreateAccountGlowOrb> _glowOrbs = [];
+  final Random _random = Random();
+  
+  @override
+  void initState() {
+    super.initState();
+    debugPrint('CreateAccountPage: received account type = ${widget.accountType}');
+    
+    _breatheController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 8),
+    )..repeat(reverse: true);
+
+    _scanController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 10),
+    )..repeat();
+
+    _twinkleController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat(reverse: true);
+
+    _floatController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 20),
+    )..repeat();
+    
+    _particleController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 30),
+    )..repeat();
+    
+    _auroraController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 15),
+    )..repeat();
+    
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+    
+    _waveController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 6),
+    )..repeat();
+    
+    // Initialize particles
+    for (int i = 0; i < 60; i++) {
+      _particles.add(_CreateAccountParticle(
+        x: _random.nextDouble(),
+        y: _random.nextDouble(),
+        size: _random.nextDouble() * 3 + 1,
+        speed: _random.nextDouble() * 0.3 + 0.1,
+        opacity: _random.nextDouble() * 0.5 + 0.2,
+        angle: _random.nextDouble() * pi * 2,
+      ));
+    }
+    
+    // Initialize glow orbs
+    _glowOrbs.addAll([
+      _CreateAccountGlowOrb(x: 0.15, y: 0.2, radius: 200, color: PayRouteColors.vibrantOrange),
+      _CreateAccountGlowOrb(x: 0.85, y: 0.3, radius: 250, color: PayRouteColors.electricGlow),
+      _CreateAccountGlowOrb(x: 0.5, y: 0.8, radius: 180, color: const Color(0xFF0EA5E9)),
+      _CreateAccountGlowOrb(x: 0.2, y: 0.7, radius: 150, color: const Color(0xFF8B5CF6)),
+      _CreateAccountGlowOrb(x: 0.8, y: 0.85, radius: 220, color: PayRouteColors.vibrantOrange),
+    ]);
+  }
 
   @override
   void dispose() {
@@ -29,6 +116,14 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _breatheController.dispose();
+    _scanController.dispose();
+    _twinkleController.dispose();
+    _floatController.dispose();
+    _particleController.dispose();
+    _auroraController.dispose();
+    _pulseController.dispose();
+    _waveController.dispose();
     super.dispose();
   }
 
@@ -43,19 +138,55 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
   PasswordStrength get _passwordStrength => PasswordStrength.from(_passwordController.text);
 
+  bool _isCreating = false;
+
   Future<void> _createAccount() async {
     FocusScope.of(context).unfocus();
 
     final ok = _formKey.currentState?.validate() ?? false;
     if (!ok) {
-      debugPrint('CreateAccountPage: validation failed; continuing to account type.');
+      debugPrint('CreateAccountPage: validation failed');
+      return;
     }
 
-    debugPrint('CreateAccountPage: create account requested (country=$_country)');
+    if (_isCreating) return; // Prevent double submission
+    
+    setState(() => _isCreating = true);
 
-    // User request: after clicking “Create Account”, navigate to the account-type
-    // selection screen (HTML parity page). Firebase wiring can be added later.
-    context.go(AppRoutes.selectAccountType);
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final accountTypeString = widget.accountType == AccountType.personal ? 'personal' : 'organization';
+
+    debugPrint('CreateAccountPage: creating account (country=$_country, accountType=$accountTypeString)');
+
+    final authProvider = context.read<AuthProvider>();
+    
+    // Create the Firebase account
+    final success = await authProvider.signUp(email, password, accountTypeString);
+    
+    if (!mounted) return;
+    
+    setState(() => _isCreating = false);
+    
+    if (success) {
+      // Enable remember me so user stays logged in
+      await authProvider.setRememberMe(true);
+      
+      // Navigate to dashboard
+      if (mounted) {
+        context.go(AppRoutes.dashboard);
+      }
+    } else {
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.errorMessage ?? 'Failed to create account'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -64,7 +195,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       backgroundColor: PayRouteColors.noirDark,
       body: Stack(
         children: [
-          const _MeshGradientBackdrop(),
+          _buildAnimatedBackground(),
           SafeArea(
             child: CustomScrollView(
               slivers: [
@@ -148,9 +279,10 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                                           ),
                                           const SizedBox(height: 18),
                                           _PrimaryGlowButton(
-                                            label: 'Create Account',
-                                            icon: Icons.arrow_forward,
-                                            onPressed: _createAccount,
+                                            label: _isCreating ? 'Creating...' : 'Create Account',
+                                            icon: _isCreating ? Icons.hourglass_empty : Icons.arrow_forward,
+                                            onPressed: _isCreating ? () {} : _createAccount,
+                                            isLoading: _isCreating,
                                           ),
                                           const SizedBox(height: 16),
                                           Text(
@@ -193,16 +325,12 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       ),
     );
   }
-}
 
-class _MeshGradientBackdrop extends StatelessWidget {
-  const _MeshGradientBackdrop();
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: DecoratedBox(
+  Widget _buildAnimatedBackground() {
+    return Stack(
+      children: [
+        // Base gradient
+        Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
@@ -210,17 +338,216 @@ class _MeshGradientBackdrop extends StatelessWidget {
               colors: [PayRouteColors.noirDark, PayRouteColors.noirBg],
             ),
           ),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment.center,
-                radius: 1.15,
-                colors: [
-                  Colors.transparent,
-                  Colors.black.withValues(alpha: 0.35),
-                ],
+        ),
+        
+        // Aurora waves
+        AnimatedBuilder(
+          animation: Listenable.merge([_auroraController, _pulseController]),
+          builder: (context, _) {
+            return CustomPaint(
+              painter: _CreateAccountAuroraPainter(
+                animation: _auroraController.value,
+                pulseAnimation: _pulseController.value,
               ),
+              size: Size.infinite,
+            );
+          },
+        ),
+        
+        // Animated glow orbs
+        AnimatedBuilder(
+          animation: Listenable.merge([_breatheController, _floatController]),
+          builder: (context, _) {
+            final size = MediaQuery.of(context).size;
+            return Stack(
+              children: _glowOrbs.map((orb) {
+                final breathe = _breatheController.value;
+                final float = sin((_floatController.value + orb.x) * pi * 2);
+                final xOffset = float * 30;
+                final yOffset = cos((_floatController.value + orb.y) * pi * 2) * 20;
+                
+                return Positioned(
+                  left: size.width * orb.x + xOffset - orb.radius,
+                  top: size.height * orb.y + yOffset - orb.radius,
+                  child: Container(
+                    width: orb.radius * 2,
+                    height: orb.radius * 2,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          orb.color.withValues(alpha: 0.15 + breathe * 0.08),
+                          orb.color.withValues(alpha: 0.05 + breathe * 0.03),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.4, 1.0],
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            );
+          },
+        ),
+        
+        // Animated mesh grid
+        AnimatedBuilder(
+          animation: _scanController,
+          builder: (context, _) {
+            return CustomPaint(
+              painter: _CreateAccountGridPainter(
+                animation: _scanController.value,
+                waveAnimation: _waveController.value,
+              ),
+              size: Size.infinite,
+            );
+          },
+        ),
+        
+        // Floating particles with connections
+        AnimatedBuilder(
+          animation: _particleController,
+          builder: (context, _) {
+            return CustomPaint(
+              painter: _CreateAccountParticlePainter(
+                particles: _particles,
+                animation: _particleController.value,
+                pulseAnimation: _pulseController.value,
+              ),
+              size: Size.infinite,
+            );
+          },
+        ),
+        
+        // Animated scan line
+        AnimatedBuilder(
+          animation: _scanController,
+          builder: (context, _) {
+            final size = MediaQuery.of(context).size;
+            final scanY = size.height * _scanController.value;
+            return Positioned(
+              top: scanY - 2,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: 4,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.transparent,
+                      PayRouteColors.electricGlow.withValues(alpha: 0.3),
+                      PayRouteColors.electricGlow.withValues(alpha: 0.6),
+                      PayRouteColors.electricGlow.withValues(alpha: 0.3),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+        
+        // Floating twinkling stars
+        AnimatedBuilder(
+          animation: Listenable.merge([_twinkleController, _floatController]),
+          builder: (context, child) {
+            return Stack(
+              children: [
+                _buildTwinklingNode(top: 0.12, left: 0.08, size: 3, delay: 0),
+                _buildTwinklingNode(top: 0.18, left: 0.92, size: 4, delay: 0.15),
+                _buildTwinklingNode(top: 0.35, left: 0.15, size: 5, delay: 0.3),
+                _buildTwinklingNode(top: 0.25, left: 0.78, size: 3, delay: 0.45),
+                _buildTwinklingNode(top: 0.55, left: 0.05, size: 4, delay: 0.6),
+                _buildTwinklingNode(top: 0.65, left: 0.88, size: 6, delay: 0.75),
+                _buildTwinklingNode(top: 0.78, left: 0.12, size: 3, delay: 0.2),
+                _buildTwinklingNode(top: 0.85, left: 0.95, size: 4, delay: 0.5),
+                _buildTwinklingNode(top: 0.42, left: 0.03, size: 5, delay: 0.85),
+                _buildTwinklingNode(top: 0.08, left: 0.55, size: 3, delay: 0.35),
+                _buildTwinklingNode(top: 0.92, left: 0.45, size: 4, delay: 0.7),
+                _buildTwinklingNode(top: 0.72, left: 0.72, size: 5, delay: 0.1),
+              ],
+            );
+          },
+        ),
+        
+        // Center pulse ring effect
+        AnimatedBuilder(
+          animation: _pulseController,
+          builder: (context, _) {
+            final size = MediaQuery.of(context).size;
+            final pulseScale = 0.8 + _pulseController.value * 0.4;
+            final pulseOpacity = 0.15 - _pulseController.value * 0.1;
+            
+            return Center(
+              child: Container(
+                width: size.width * 0.6 * pulseScale,
+                height: size.width * 0.6 * pulseScale,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: PayRouteColors.vibrantOrange.withValues(alpha: pulseOpacity.clamp(0.0, 1.0)),
+                    width: 1.5,
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+
+        // Vignette overlay
+        Container(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment.center,
+              radius: 1.4,
+              colors: [
+                Colors.transparent,
+                Colors.black.withValues(alpha: 0.4),
+                Colors.black.withValues(alpha: 0.85),
+              ],
+              stops: const [0.0, 0.5, 1.0],
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTwinklingNode({
+    required double top,
+    required double left,
+    required double size,
+    required double delay,
+  }) {
+    final twinkleValue = ((_twinkleController.value + delay) % 1.0);
+    final twinkleScale = 0.5 + (sin(twinkleValue * pi) * 1.0);
+    final twinkleOpacity = 0.3 + (sin(twinkleValue * pi) * 0.7);
+    
+    final floatOffset = sin((_floatController.value + delay) * pi * 2);
+    
+    return Positioned(
+      top: MediaQuery.of(context).size.height * top + (floatOffset * 8),
+      left: MediaQuery.of(context).size.width * left + (floatOffset * 5),
+      child: Transform.scale(
+        scale: twinkleScale,
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: twinkleOpacity),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: PayRouteColors.electricGlow.withValues(alpha: twinkleOpacity * 0.8),
+                blurRadius: 15,
+                spreadRadius: 3,
+              ),
+              BoxShadow(
+                color: Colors.white.withValues(alpha: twinkleOpacity * 0.5),
+                blurRadius: 5,
+                spreadRadius: 1,
+              ),
+            ],
           ),
         ),
       ),
@@ -238,25 +565,10 @@ class _TopBar extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [PayRouteColors.vibrantOrange, PayRouteColors.vibrantOrangeDark],
-                ),
-                boxShadow: [BoxShadow(color: PayRouteColors.vibrantOrange.withValues(alpha: 0.20), blurRadius: 24, offset: const Offset(0, 8))],
-              ),
-              child: const Icon(Icons.hub, color: PayRouteColors.white, size: 22),
-            ),
-            const SizedBox(width: 10),
-            Text('PayRoute', style: context.textStyles.titleLarge?.copyWith(color: PayRouteColors.white, fontWeight: FontWeight.w800, letterSpacing: -0.2)),
-          ],
+        Image.asset(
+          'assets/images/Dynamic.png',
+          height: 40,
+          fit: BoxFit.contain,
         ),
         IconButton(
           onPressed: onClose,
@@ -609,8 +921,9 @@ class _PrimaryGlowButton extends StatefulWidget {
   final String label;
   final IconData icon;
   final VoidCallback onPressed;
+  final bool isLoading;
 
-  const _PrimaryGlowButton({required this.label, required this.icon, required this.onPressed});
+  const _PrimaryGlowButton({required this.label, required this.icon, required this.onPressed, this.isLoading = false});
 
   @override
   State<_PrimaryGlowButton> createState() => _PrimaryGlowButtonState();
@@ -625,14 +938,16 @@ class _PrimaryGlowButtonState extends State<_PrimaryGlowButton> {
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
-        onTap: widget.onPressed,
+        onTap: widget.isLoading ? null : widget.onPressed,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOut,
           padding: const EdgeInsets.symmetric(vertical: 18),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            gradient: const LinearGradient(colors: [PayRouteColors.vibrantOrange, PayRouteColors.vibrantOrangeDark]),
+            gradient: LinearGradient(colors: widget.isLoading 
+              ? [PayRouteColors.vibrantOrange.withValues(alpha: 0.6), PayRouteColors.vibrantOrangeDark.withValues(alpha: 0.6)]
+              : [PayRouteColors.vibrantOrange, PayRouteColors.vibrantOrangeDark]),
             boxShadow: [
               BoxShadow(color: PayRouteColors.vibrantOrange.withValues(alpha: 0.40), blurRadius: 22, spreadRadius: 0, offset: const Offset(0, 10)),
             ],
@@ -640,14 +955,27 @@ class _PrimaryGlowButtonState extends State<_PrimaryGlowButton> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              if (widget.isLoading) ...[
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(PayRouteColors.white),
+                  ),
+                ),
+                const SizedBox(width: 10),
+              ],
               Text(widget.label, style: context.textStyles.titleMedium?.copyWith(color: PayRouteColors.white, fontWeight: FontWeight.w800, letterSpacing: 0.2)),
-              const SizedBox(width: 10),
-              AnimatedSlide(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOut,
-                offset: _hovered ? const Offset(0.15, 0) : Offset.zero,
-                child: Icon(widget.icon, color: PayRouteColors.white, size: 18),
-              ),
+              if (!widget.isLoading) ...[
+                const SizedBox(width: 10),
+                AnimatedSlide(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOut,
+                  offset: _hovered ? const Offset(0.15, 0) : Offset.zero,
+                  child: Icon(widget.icon, color: PayRouteColors.white, size: 18),
+                ),
+              ],
             ],
           ),
         ),
@@ -684,4 +1012,200 @@ class PasswordStrength {
       },
     );
   }
+}
+
+// Data classes for particles and orbs
+class _CreateAccountParticle {
+  double x, y, size, speed, opacity, angle;
+  _CreateAccountParticle({
+    required this.x,
+    required this.y,
+    required this.size,
+    required this.speed,
+    required this.opacity,
+    required this.angle,
+  });
+}
+
+class _CreateAccountGlowOrb {
+  final double x, y, radius;
+  final Color color;
+  _CreateAccountGlowOrb({required this.x, required this.y, required this.radius, required this.color});
+}
+
+// Aurora wave painter
+class _CreateAccountAuroraPainter extends CustomPainter {
+  final double animation;
+  final double pulseAnimation;
+
+  _CreateAccountAuroraPainter({required this.animation, required this.pulseAnimation});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+    
+    // Multiple aurora waves
+    for (int i = 0; i < 3; i++) {
+      final path = Path();
+      final waveOffset = animation * 2 * pi + i * pi / 3;
+      final yBase = size.height * (0.2 + i * 0.15);
+      final amplitude = 40.0 + pulseAnimation * 20 + i * 10;
+      
+      path.moveTo(0, yBase);
+      
+      for (double x = 0; x <= size.width; x += 5) {
+        final y = yBase + 
+            sin((x / size.width) * 4 * pi + waveOffset) * amplitude +
+            cos((x / size.width) * 2 * pi + waveOffset * 0.5) * amplitude * 0.5;
+        path.lineTo(x, y);
+      }
+      
+      path.lineTo(size.width, 0);
+      path.lineTo(0, 0);
+      path.close();
+      
+      final gradient = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          i == 0 
+            ? PayRouteColors.vibrantOrange.withValues(alpha: 0.03 + pulseAnimation * 0.02)
+            : i == 1 
+              ? const Color(0xFF0EA5E9).withValues(alpha: 0.02 + pulseAnimation * 0.015)
+              : const Color(0xFF8B5CF6).withValues(alpha: 0.02 + pulseAnimation * 0.01),
+          Colors.transparent,
+        ],
+      );
+      
+      paint.shader = gradient.createShader(Rect.fromLTWH(0, 0, size.width, yBase + amplitude));
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CreateAccountAuroraPainter oldDelegate) =>
+      animation != oldDelegate.animation || pulseAnimation != oldDelegate.pulseAnimation;
+}
+
+// Perspective grid with wave effect
+class _CreateAccountGridPainter extends CustomPainter {
+  final double animation;
+  final double waveAnimation;
+
+  _CreateAccountGridPainter({required this.animation, required this.waveAnimation});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..strokeWidth = 0.5
+      ..style = PaintingStyle.stroke;
+
+    const gridSize = 50.0;
+    final centerX = size.width / 2;
+    final centerY = size.height / 2;
+    
+    // Horizontal perspective lines
+    for (double y = 0; y < size.height; y += gridSize) {
+      final distFromCenter = (y - centerY).abs() / centerY;
+      final waveOffset = sin(waveAnimation * 2 * pi + y / 100) * 5;
+      final opacity = 0.08 * (1 - distFromCenter * 0.5);
+      
+      paint.color = PayRouteColors.electricGlow.withValues(alpha: opacity.clamp(0.0, 1.0));
+      
+      final path = Path();
+      path.moveTo(0, y + waveOffset);
+      
+      for (double x = 0; x <= size.width; x += 10) {
+        final localWave = sin(waveAnimation * 2 * pi + x / 80) * 3;
+        path.lineTo(x, y + waveOffset + localWave);
+      }
+      
+      canvas.drawPath(path, paint);
+    }
+    
+    // Vertical lines with perspective
+    for (double x = 0; x < size.width; x += gridSize) {
+      final distFromCenter = (x - centerX).abs() / centerX;
+      final opacity = 0.06 * (1 - distFromCenter * 0.5);
+      
+      paint.color = PayRouteColors.electricGlow.withValues(alpha: opacity.clamp(0.0, 1.0));
+      
+      final path = Path();
+      path.moveTo(x, 0);
+      
+      for (double y = 0; y <= size.height; y += 10) {
+        final waveOffset = sin(waveAnimation * 2 * pi + y / 100) * 2;
+        path.lineTo(x + waveOffset, y);
+      }
+      
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CreateAccountGridPainter oldDelegate) =>
+      animation != oldDelegate.animation || waveAnimation != oldDelegate.waveAnimation;
+}
+
+// Particle network painter
+class _CreateAccountParticlePainter extends CustomPainter {
+  final List<_CreateAccountParticle> particles;
+  final double animation;
+  final double pulseAnimation;
+
+  _CreateAccountParticlePainter({
+    required this.particles,
+    required this.animation,
+    required this.pulseAnimation,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+    final linePaint = Paint()
+      ..strokeWidth = 0.5
+      ..style = PaintingStyle.stroke;
+    
+    // Update and draw particles
+    final positions = <Offset>[];
+    
+    for (var particle in particles) {
+      // Update position with subtle movement
+      final angle = animation * 2 * pi + particle.angle;
+      final dx = cos(angle) * particle.speed * 50;
+      final dy = sin(angle) * particle.speed * 50;
+      
+      final x = ((particle.x * size.width + dx) % size.width + size.width) % size.width;
+      final y = ((particle.y * size.height + dy) % size.height + size.height) % size.height;
+      
+      positions.add(Offset(x, y));
+      
+      // Draw particle with glow
+      final opacity = particle.opacity * (0.8 + pulseAnimation * 0.4);
+      paint.color = PayRouteColors.electricGlow.withValues(alpha: opacity.clamp(0.0, 1.0));
+      
+      canvas.drawCircle(Offset(x, y), particle.size, paint);
+      
+      // Outer glow
+      paint.color = PayRouteColors.electricGlow.withValues(alpha: (opacity * 0.3).clamp(0.0, 1.0));
+      canvas.drawCircle(Offset(x, y), particle.size * 2, paint);
+    }
+    
+    // Draw connections between nearby particles
+    const connectionDistance = 120.0;
+    for (int i = 0; i < positions.length; i++) {
+      for (int j = i + 1; j < positions.length; j++) {
+        final distance = (positions[i] - positions[j]).distance;
+        if (distance < connectionDistance) {
+          final opacity = (1 - distance / connectionDistance) * 0.15;
+          linePaint.color = PayRouteColors.electricGlow.withValues(alpha: opacity.clamp(0.0, 1.0));
+          canvas.drawLine(positions[i], positions[j], linePaint);
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CreateAccountParticlePainter oldDelegate) =>
+      animation != oldDelegate.animation || pulseAnimation != oldDelegate.pulseAnimation;
 }

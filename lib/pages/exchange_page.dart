@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:payroute_desktop/theme.dart';
 import 'package:payroute_desktop/widgets/finroute_responsive_scaffold.dart';
+import 'package:payroute_desktop/providers/auth_provider.dart';
 
 class ExchangePage extends StatefulWidget {
   const ExchangePage({super.key});
@@ -160,33 +162,48 @@ class _ExchangeHeader extends StatelessWidget {
           ],
         );
 
-        final avatar = Stack(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: border),
-                image: const DecorationImage(
-                  image: NetworkImage(
-                    'https://lh3.googleusercontent.com/aida-public/AB6AXuDIaCwDhxVyzTNPQbH6aaAvTB4kSusDv5bbYxEyGKb-1TPNRJk91FgmYmUXT0i8vx_rEyeiQxswISwl2k6YhPpF6d7qSqQ0mrrCPu_XpvzN_trba7SfY6EpmkKfdalH8K0Mm6lt6rVQdGweDb1PDRrudp21TTAMVmdeBLRsYyk0GZI8DhfWA-L90GYjvQbC3HfDiejXV3gCK4z_SmqjrS3TWliIRISkjuUcRqa_TlHL6rFb-MaL5LgFCZVt6Rl_zueXYSIRlwEvITx8',
-                  ),
-                  fit: BoxFit.cover,
+        Widget _buildAvatar(String? photoUrl, String initials, Color border, Color bg) {
+          return Stack(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: border),
+                  image: photoUrl != null
+                      ? DecorationImage(
+                          image: NetworkImage(photoUrl),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                  color: photoUrl == null ? PayRouteColors.dashboardPrimary : null,
+                ),
+                child: photoUrl == null
+                    ? Center(
+                        child: Text(
+                          initials,
+                          style: GoogleFonts.inter(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                          ),
+                        ),
+                      )
+                    : null,
+              ),
+              Positioned(
+                bottom: 2,
+                right: 2,
+                child: Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(color: PayRouteColors.dashboardGreen, shape: BoxShape.circle, border: Border.all(color: bg, width: 2)),
                 ),
               ),
-            ),
-            Positioned(
-              bottom: 2,
-              right: 2,
-              child: Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(color: PayRouteColors.dashboardGreen, shape: BoxShape.circle, border: Border.all(color: bg, width: 2)),
-              ),
-            ),
-          ],
-        );
+            ],
+          );
+        }
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
@@ -204,16 +221,32 @@ class _ExchangeHeader extends StatelessWidget {
               notif,
               const SizedBox(width: 12),
               if (!isTight) ...[
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text('Tunde A.', style: GoogleFonts.inter(color: textPrimary, fontWeight: FontWeight.w700), overflow: TextOverflow.ellipsis),
-                    Text('Admin', style: GoogleFonts.inter(color: textSecondary, fontSize: 12)),
-                  ],
+                Consumer<AuthProvider>(
+                  builder: (context, authProvider, _) {
+                    final user = authProvider.userModel;
+                    final firebaseUser = authProvider.firebaseUser;
+                    final displayName = user?.displayName ?? firebaseUser?.email?.split('@')[0] ?? 'User';
+                    final displayRole = user?.displayRole ?? 'User';
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(displayName, style: GoogleFonts.inter(color: textPrimary, fontWeight: FontWeight.w700), overflow: TextOverflow.ellipsis),
+                        Text(displayRole, style: GoogleFonts.inter(color: textSecondary, fontSize: 12)),
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(width: 12),
               ],
-              avatar,
+              Consumer<AuthProvider>(
+                builder: (context, authProvider, _) {
+                  final user = authProvider.userModel;
+                  final firebaseUser = authProvider.firebaseUser;
+                  final photoUrl = user?.photoUrl ?? firebaseUser?.photoURL;
+                  final initials = user?.initials ?? 'U';
+                  return _buildAvatar(photoUrl, initials, border, bg);
+                },
+              ),
             ],
           ),
         );
@@ -266,11 +299,41 @@ class _ExchangeBody extends StatelessWidget {
   }
 }
 
-class _SwapPanel extends StatelessWidget {
+class _SwapPanel extends StatefulWidget {
   final TextEditingController sendController;
   final TextEditingController receiveController;
 
   const _SwapPanel({required this.sendController, required this.receiveController});
+
+  @override
+  State<_SwapPanel> createState() => _SwapPanelState();
+}
+
+class _SwapPanelState extends State<_SwapPanel> {
+  // Mock balance - in real app, this would come from user's account
+  final double _balance = 0.00;
+  bool _exceedsBalance = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.sendController.addListener(_validateAmount);
+    _validateAmount();
+  }
+
+  @override
+  void dispose() {
+    widget.sendController.removeListener(_validateAmount);
+    super.dispose();
+  }
+
+  void _validateAmount() {
+    final text = widget.sendController.text.replaceAll(',', '');
+    final amount = double.tryParse(text) ?? 0.0;
+    setState(() {
+      _exceedsBalance = amount > _balance;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -301,13 +364,28 @@ class _SwapPanel extends StatelessWidget {
               const SizedBox(height: 18),
               _AmountCard(
                 label: 'You Send',
-                trailing: 'Balance:  \$14,250.00',
-                controller: sendController,
-                accentColor: Colors.white,
+                trailing: 'Balance:  \$${_balance.toStringAsFixed(2)}',
+                controller: widget.sendController,
+                accentColor: _exceedsBalance ? Colors.red : DashboardPalette.textPrimary(b),
                 currencyLabel: 'USD',
                 flag: '🇺🇸',
                 readOnly: false,
+                hasError: _exceedsBalance,
               ),
+              if (_exceedsBalance)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, left: 6),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.red, size: 16),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Insufficient balance. Please enter an amount within your available balance.',
+                        style: GoogleFonts.inter(color: Colors.red, fontSize: 12, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                ),
               const SizedBox(height: 14),
               const _SwapDivider(),
               const SizedBox(height: 14),
@@ -329,7 +407,7 @@ class _SwapPanel extends StatelessWidget {
                     ],
                   ),
                 ),
-                controller: receiveController,
+                controller: widget.receiveController,
                 accentColor: PayRouteColors.electricBlue,
                 currencyLabel: 'NGN',
                 flag: '🇳🇬',
@@ -372,20 +450,54 @@ class _SwapPanel extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 18),
-              _PrimaryGlowButton(
-                label: 'Review & Exchange',
-                icon: Icons.arrow_forward,
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Review flow is not connected yet.', style: GoogleFonts.inter()),
-                      backgroundColor: PayRouteColors.dashboardSurfaceDark,
+              _exceedsBalance
+                  ? _DisabledExchangeButton()
+                  : _PrimaryGlowButton(
+                      label: 'Review & Exchange',
+                      icon: Icons.arrow_forward,
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Review flow is not connected yet.', style: GoogleFonts.inter()),
+                            backgroundColor: PayRouteColors.dashboardSurfaceDark,
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DisabledExchangeButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final b = Theme.of(context).brightness;
+    return Container(
+      height: 56,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: DashboardPalette.surface(b).withValues(alpha: 0.6),
+        border: Border.all(color: DashboardPalette.border(b)),
+      ),
+      child: Center(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Review & Exchange',
+              style: GoogleFonts.inter(
+                color: DashboardPalette.textSecondary(b).withValues(alpha: 0.5),
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Icon(Icons.arrow_forward, color: DashboardPalette.textSecondary(b).withValues(alpha: 0.5)),
+          ],
         ),
       ),
     );
@@ -509,6 +621,7 @@ class _AmountCard extends StatelessWidget {
   final String currencyLabel;
   final String flag;
   final bool readOnly;
+  final bool hasError;
 
   const _AmountCard({
     required this.label,
@@ -519,6 +632,7 @@ class _AmountCard extends StatelessWidget {
     required this.currencyLabel,
     required this.flag,
     required this.readOnly,
+    this.hasError = false,
   });
 
   @override
@@ -529,14 +643,15 @@ class _AmountCard extends StatelessWidget {
     final textSecondary = DashboardPalette.textSecondary(b);
     final screenWidth = MediaQuery.sizeOf(context).width;
     final amountFontSize = screenWidth < 360 ? 26.0 : screenWidth < 420 ? 30.0 : 34.0;
+    final borderColor = hasError ? Colors.red : border;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 240),
       curve: Curves.easeOutCubic,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: surface.withValues(alpha: b == Brightness.dark ? 0.52 : 1),
+        color: hasError ? Colors.red.withValues(alpha: 0.05) : surface.withValues(alpha: b == Brightness.dark ? 0.52 : 1),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: border),
+        border: Border.all(color: borderColor, width: hasError ? 1.5 : 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1193,9 +1308,9 @@ class _RouteOptionState extends State<_RouteOption> {
                 children: [
                   Expanded(child: _KpiTile(label: 'Rate', value: data.rate, valueColor: textPrimary)),
                   const SizedBox(width: 10),
-                  Expanded(child: _KpiTile(label: 'Fee', value: data.fee, valueColor: data.feeColor)),
+                  Expanded(child: _KpiTile(label: 'Fee', value: data.fee, valueColor: data.feeColor == PayRouteColors.dashboardGreen ? PayRouteColors.dashboardGreen : textSecondary)),
                   const SizedBox(width: 10),
-                  Expanded(child: _KpiTile(label: 'ETA', value: data.eta, valueColor: data.etaColor)),
+                  Expanded(child: _KpiTile(label: 'ETA', value: data.eta, valueColor: data.etaColor == PayRouteColors.dashboardGreen ? PayRouteColors.dashboardGreen : textPrimary)),
                 ],
               ),
             ],

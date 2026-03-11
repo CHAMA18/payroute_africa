@@ -3,8 +3,10 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:payroute_desktop/theme.dart';
 import 'package:payroute_desktop/widgets/finroute_responsive_scaffold.dart';
+import 'package:payroute_desktop/providers/auth_provider.dart';
 
 class CardsPage extends StatefulWidget {
   const CardsPage({super.key});
@@ -235,7 +237,9 @@ class _AddCardButtonState extends State<_AddCardButton> {
   @override
   Widget build(BuildContext context) {
     final b = Theme.of(context).brightness;
+    final isDark = b == Brightness.dark;
     final border = DashboardPalette.border(b);
+    final textPrimary = DashboardPalette.textPrimary(b);
     return MouseRegion(
       onEnter: (_) => setState(() => _hover = true),
       onExit: (_) => setState(() => _hover = false),
@@ -244,12 +248,19 @@ class _AddCardButtonState extends State<_AddCardButton> {
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Colors.white.withValues(alpha: 0.08),
-              Colors.white.withValues(alpha: 0.04),
-            ],
-          ),
+          gradient: isDark
+              ? LinearGradient(
+                  colors: [
+                    Colors.white.withValues(alpha: 0.08),
+                    Colors.white.withValues(alpha: 0.04),
+                  ],
+                )
+              : LinearGradient(
+                  colors: [
+                    PayRouteColors.dashboardPrimary.withValues(alpha: 0.15),
+                    PayRouteColors.dashboardPrimary.withValues(alpha: 0.08),
+                  ],
+                ),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: _hover ? PayRouteColors.dashboardPrimary.withValues(alpha: 0.5) : border),
           boxShadow: [
@@ -274,7 +285,7 @@ class _AddCardButtonState extends State<_AddCardButton> {
               const SizedBox(width: 8),
               AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 180),
-                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: _hover ? PayRouteColors.dashboardPrimary : Colors.white),
+                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: _hover ? PayRouteColors.dashboardPrimary : textPrimary),
                 child: const Text('Add New Card'),
               ),
             ],
@@ -309,15 +320,19 @@ class _NotificationButtonState extends State<_NotificationButton> with SingleTic
 
   @override
   Widget build(BuildContext context) {
+    final b = Theme.of(context).brightness;
+    final isDark = b == Brightness.dark;
     return Stack(
       clipBehavior: Clip.none,
       children: [
         IconButton(
           onPressed: () {},
-          icon: Icon(Icons.notifications, color: Colors.white.withValues(alpha: 0.75)),
+          icon: Icon(Icons.notifications, color: DashboardPalette.iconMuted(b)),
           style: ButtonStyle(
             overlayColor: const WidgetStatePropertyAll(Colors.transparent),
-            backgroundColor: WidgetStatePropertyAll(Colors.white.withValues(alpha: 0.02)),
+            backgroundColor: WidgetStatePropertyAll(
+              isDark ? Colors.white.withValues(alpha: 0.02) : Colors.grey.withValues(alpha: 0.08),
+            ),
             shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(999))),
           ),
         ),
@@ -351,47 +366,77 @@ class _UserChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final b = Theme.of(context).brightness;
+    final textPrimary = DashboardPalette.textPrimary(b);
     final secondary = DashboardPalette.textSecondary(b);
     return Row(
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text('Tunde A.', style: GoogleFonts.inter(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w800)),
-            Text('Admin', style: GoogleFonts.inter(color: secondary, fontSize: 11, fontWeight: FontWeight.w600)),
-          ],
+        Consumer<AuthProvider>(
+          builder: (context, authProvider, _) {
+            final user = authProvider.userModel;
+            final firebaseUser = authProvider.firebaseUser;
+            final displayName = user?.displayName ?? firebaseUser?.email?.split('@')[0] ?? 'User';
+            final displayRole = user?.displayRole ?? 'User';
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(displayName, style: GoogleFonts.inter(color: textPrimary, fontSize: 13, fontWeight: FontWeight.w800)),
+                Text(displayRole, style: GoogleFonts.inter(color: secondary, fontSize: 11, fontWeight: FontWeight.w600)),
+              ],
+            );
+          },
         ),
         const SizedBox(width: 12),
-        Stack(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
-                image: const DecorationImage(
-                  image: NetworkImage(
-                    'https://lh3.googleusercontent.com/aida-public/AB6AXuDIaCwDhxVyzTNPQbH6aaAvTB4kSusDv5bbYxEyGKb-1TPNRJk91FgmYmUXT0i8vx_rEyeiQxswISwl2k6YhPpF6d7qSqQ0mrrCPu_XpvzN_trba7SfY6EpmkKfdalH8K0Mm6lt6rVQdGweDb1PDRrudp21TTAMVmdeBLRsYyk0GZI8DhfWA-L90GYjvQbC3HfDiejXV3gCK4z_SmqjrS3TWliIRISkjuUcRqa_TlHL6rFb-MaL5LgFCZVt6Rl_zueXYSIRlwEvITx8',
+Consumer<AuthProvider>(
+          builder: (context, authProvider, _) {
+            final user = authProvider.userModel;
+            final firebaseUser = authProvider.firebaseUser;
+            final photoUrl = user?.photoUrl ?? firebaseUser?.photoURL;
+            final initials = user?.initials ?? 'U';
+            return Stack(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+                    image: photoUrl != null
+                        ? DecorationImage(
+                            image: NetworkImage(photoUrl),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                    color: photoUrl == null ? PayRouteColors.dashboardPrimary : null,
                   ),
-                  fit: BoxFit.cover,
+                  child: photoUrl == null
+                      ? Center(
+                          child: Text(
+                            initials,
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                            ),
+                          ),
+                        )
+                      : null,
                 ),
-              ),
-            ),
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: PayRouteColors.dashboardGreen,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: PayRouteColors.dashboardBg, width: 2),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: PayRouteColors.dashboardGreen,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: PayRouteColors.dashboardBg, width: 2),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         ),
       ],
     );
@@ -418,7 +463,7 @@ class _YourCardsPanel extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text('Your Cards', style: GoogleFonts.inter(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800)),
+              Text('Your Cards', style: GoogleFonts.inter(color: DashboardPalette.textPrimary(b), fontSize: 16, fontWeight: FontWeight.w800)),
               const Spacer(),
               _IconCircleButton(icon: Icons.arrow_back, enabled: cardIndex != 0, onTap: cardIndex != 0 ? onPrev : null),
               const SizedBox(width: 10),
@@ -453,7 +498,9 @@ class _YourCardsPanel extends StatelessWidget {
                 width: i == cardIndex ? 32 : 10,
                 height: 6,
                 decoration: BoxDecoration(
-                  color: i == cardIndex ? PayRouteColors.dashboardPrimary : Colors.white.withValues(alpha: 0.18),
+                  color: i == cardIndex
+                      ? PayRouteColors.dashboardPrimary
+                      : (b == Brightness.dark ? Colors.white.withValues(alpha: 0.18) : Colors.black.withValues(alpha: 0.15)),
                   borderRadius: BorderRadius.circular(999),
                   boxShadow: i == cardIndex
                       ? [BoxShadow(color: PayRouteColors.dashboardPrimary.withValues(alpha: 0.8), blurRadius: 14)]
@@ -544,16 +591,7 @@ class _FloatingCardState extends State<_FloatingCard> {
                       ),
                     ),
                   ),
-                  Positioned(
-                    right: -60,
-                    top: -60,
-                    child: Container(width: 180, height: 180, decoration: BoxDecoration(color: PayRouteColors.dashboardPrimary.withValues(alpha: 0.20), shape: BoxShape.circle), child: const SizedBox()),
-                  ),
-                  Positioned(
-                    left: -60,
-                    bottom: -60,
-                    child: Container(width: 180, height: 180, decoration: BoxDecoration(color: PayRouteColors.electricBlue.withValues(alpha: 0.10), shape: BoxShape.circle), child: const SizedBox()),
-                  ),
+
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -680,7 +718,7 @@ class _QuickActionCardState extends State<_QuickActionCard> {
   Widget build(BuildContext context) {
     final b = Theme.of(context).brightness;
     final border = DashboardPalette.border(b);
-    final labelColor = _hover ? Colors.white : const Color(0xFFCBD5E1);
+    final labelColor = _hover ? DashboardPalette.textPrimary(b) : DashboardPalette.textSecondary(b);
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hover = true),
@@ -689,7 +727,9 @@ class _QuickActionCardState extends State<_QuickActionCard> {
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: _hover ? 0.05 : 0.03),
+          color: b == Brightness.dark
+              ? Colors.white.withValues(alpha: _hover ? 0.05 : 0.03)
+              : (_hover ? Colors.grey.withValues(alpha: 0.08) : Colors.grey.withValues(alpha: 0.04)),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: _hover ? PayRouteColors.dashboardPrimary.withValues(alpha: 0.30) : border),
         ),
@@ -754,7 +794,7 @@ class _DigitalWalletPanel extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text('Digital Wallet', style: GoogleFonts.inter(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800)),
+              Text('Digital Wallet', style: GoogleFonts.inter(color: DashboardPalette.textPrimary(b), fontSize: 16, fontWeight: FontWeight.w800)),
               const Spacer(),
               _LinkButton(label: 'Manage', onTap: () {}),
             ],
@@ -857,7 +897,9 @@ class _WalletRowState extends State<_WalletRow> {
           curve: Curves.easeOutCubic,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: _hover ? 0.05 : 0.02),
+            color: b == Brightness.dark
+                ? Colors.white.withValues(alpha: _hover ? 0.05 : 0.02)
+                : (_hover ? Colors.grey.withValues(alpha: 0.08) : Colors.grey.withValues(alpha: 0.04)),
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: border.withValues(alpha: 0.55)),
           ),
@@ -869,7 +911,7 @@ class _WalletRowState extends State<_WalletRow> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(widget.title, style: GoogleFonts.inter(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w800)),
+                    Text(widget.title, style: GoogleFonts.inter(color: DashboardPalette.textPrimary(b), fontSize: 13, fontWeight: FontWeight.w800)),
                     const SizedBox(height: 2),
                     widget.subtitle,
                   ],
@@ -903,7 +945,7 @@ class _RecentTransactionsPanel extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text('Recent Transactions', style: GoogleFonts.inter(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800)),
+                Text('Recent Transactions', style: GoogleFonts.inter(color: DashboardPalette.textPrimary(b), fontSize: 16, fontWeight: FontWeight.w800)),
                 const Spacer(),
                 _IconSquareButton(icon: Icons.filter_list, onTap: () {}),
               ],
@@ -922,7 +964,7 @@ class _RecentTransactionsPanel extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 14),
-            Container(height: 1, color: Colors.white.withValues(alpha: 0.06)),
+            Container(height: 1, color: b == Brightness.dark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.06)),
             const SizedBox(height: 10),
             Center(child: _LinkButton(label: 'View all transactions', onTap: () {})),
           ],
@@ -953,6 +995,8 @@ class _TxnRowState extends State<_TxnRow> {
   Widget build(BuildContext context) {
     final b = Theme.of(context).brightness;
     final border = DashboardPalette.border(b);
+    final textPrimary = DashboardPalette.textPrimary(b);
+    final textSecondary = DashboardPalette.textSecondary(b);
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hover = true),
@@ -963,7 +1007,9 @@ class _TxnRowState extends State<_TxnRow> {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: _hover ? 0.03 : 0.00),
+          color: b == Brightness.dark
+              ? Colors.white.withValues(alpha: _hover ? 0.03 : 0.00)
+              : (_hover ? Colors.grey.withValues(alpha: 0.06) : Colors.transparent),
           borderRadius: BorderRadius.circular(18),
         ),
         child: Row(
@@ -972,23 +1018,25 @@ class _TxnRowState extends State<_TxnRow> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.04),
+                color: b == Brightness.dark
+                    ? Colors.white.withValues(alpha: 0.04)
+                    : Colors.grey.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
                 border: Border.all(color: _hover ? PayRouteColors.dashboardPrimary.withValues(alpha: 0.30) : border),
                 boxShadow: _hover
                     ? [BoxShadow(color: PayRouteColors.dashboardPrimary.withValues(alpha: 0.15), blurRadius: 14)]
                     : null,
               ),
-              child: Icon(widget.icon, color: Colors.white, size: 18),
+              child: Icon(widget.icon, color: textPrimary, size: 18),
             ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(widget.title, style: GoogleFonts.inter(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900)),
+                  Text(widget.title, style: GoogleFonts.inter(color: textPrimary, fontSize: 13, fontWeight: FontWeight.w900)),
                   const SizedBox(height: 2),
-                  Text(widget.meta, style: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 12, fontWeight: FontWeight.w600)),
+                  Text(widget.meta, style: GoogleFonts.inter(color: textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
                 ],
               ),
             ),
@@ -996,7 +1044,7 @@ class _TxnRowState extends State<_TxnRow> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(widget.amount, style: GoogleFonts.inter(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900)),
+                Text(widget.amount, style: GoogleFonts.inter(color: textPrimary, fontSize: 13, fontWeight: FontWeight.w900)),
                 const SizedBox(height: 2),
                 Text(widget.status, style: GoogleFonts.inter(color: widget.statusColor, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.6)),
               ],
@@ -1018,21 +1066,30 @@ class _GlassPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final b = Theme.of(context).brightness;
+    final isDark = b == Brightness.dark;
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(radius),
         border: Border.fromBorderSide(border),
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.white.withValues(alpha: 0.10),
-            Colors.white.withValues(alpha: 0.05),
-          ],
-        ),
+        color: isDark ? null : Colors.white,
+        gradient: isDark
+            ? LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.white.withValues(alpha: 0.10),
+                  Colors.white.withValues(alpha: 0.05),
+                ],
+              )
+            : null,
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.18), blurRadius: 30, offset: const Offset(0, 12)),
+          BoxShadow(
+            color: isDark ? Colors.black.withValues(alpha: 0.18) : Colors.black.withValues(alpha: 0.06),
+            blurRadius: 30,
+            offset: const Offset(0, 12),
+          ),
         ],
       ),
       child: ClipRRect(
@@ -1055,13 +1112,17 @@ class _IconCircleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = enabled ? Colors.white : const Color(0xFF94A3B8);
+    final b = Theme.of(context).brightness;
+    final isDark = b == Brightness.dark;
+    final color = enabled ? DashboardPalette.textPrimary(b) : DashboardPalette.textSecondary(b);
     return IconButton(
       onPressed: enabled ? onTap : null,
       icon: Icon(icon, size: 18, color: color),
       style: ButtonStyle(
         overlayColor: const WidgetStatePropertyAll(Colors.transparent),
-        backgroundColor: WidgetStatePropertyAll(Colors.white.withValues(alpha: 0.06)),
+        backgroundColor: WidgetStatePropertyAll(
+          isDark ? Colors.white.withValues(alpha: 0.06) : Colors.grey.withValues(alpha: 0.10),
+        ),
         shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(999))),
       ),
     );
@@ -1076,12 +1137,16 @@ class _IconSquareButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final b = Theme.of(context).brightness;
+    final isDark = b == Brightness.dark;
     return IconButton(
       onPressed: onTap,
-      icon: Icon(icon, size: 18, color: Colors.white.withValues(alpha: 0.75)),
+      icon: Icon(icon, size: 18, color: DashboardPalette.iconMuted(b)),
       style: ButtonStyle(
         overlayColor: const WidgetStatePropertyAll(Colors.transparent),
-        backgroundColor: WidgetStatePropertyAll(Colors.white.withValues(alpha: 0.06)),
+        backgroundColor: WidgetStatePropertyAll(
+          isDark ? Colors.white.withValues(alpha: 0.06) : Colors.grey.withValues(alpha: 0.10),
+        ),
         shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
       ),
     );
@@ -1103,6 +1168,8 @@ class _LinkButtonState extends State<_LinkButton> {
 
   @override
   Widget build(BuildContext context) {
+    final b = Theme.of(context).brightness;
+    final textPrimary = DashboardPalette.textPrimary(b);
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hover = true),
@@ -1111,7 +1178,7 @@ class _LinkButtonState extends State<_LinkButton> {
         onTap: widget.onTap,
         child: AnimatedDefaultTextStyle(
           duration: const Duration(milliseconds: 180),
-          style: GoogleFonts.inter(color: _hover ? Colors.white : PayRouteColors.dashboardPrimary, fontSize: 12, fontWeight: FontWeight.w800),
+          style: GoogleFonts.inter(color: _hover ? textPrimary : PayRouteColors.dashboardPrimary, fontSize: 12, fontWeight: FontWeight.w800),
           child: Text(widget.label),
         ),
       ),
@@ -1134,6 +1201,9 @@ class _SmallOutlineButtonState extends State<_SmallOutlineButton> {
 
   @override
   Widget build(BuildContext context) {
+    final b = Theme.of(context).brightness;
+    final isDark = b == Brightness.dark;
+    final textPrimary = DashboardPalette.textPrimary(b);
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hover = true),
@@ -1142,12 +1212,18 @@ class _SmallOutlineButtonState extends State<_SmallOutlineButton> {
         onPressed: widget.onTap,
         style: ButtonStyle(
           overlayColor: const WidgetStatePropertyAll(Colors.transparent),
-          backgroundColor: WidgetStatePropertyAll(Colors.white.withValues(alpha: _hover ? 0.10 : 0.06)),
+          backgroundColor: WidgetStatePropertyAll(
+            isDark
+                ? Colors.white.withValues(alpha: _hover ? 0.10 : 0.06)
+                : (_hover ? Colors.grey.withValues(alpha: 0.15) : Colors.grey.withValues(alpha: 0.10)),
+          ),
           padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
           shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-          side: WidgetStatePropertyAll(BorderSide(color: Colors.white.withValues(alpha: 0.08))),
+          side: WidgetStatePropertyAll(BorderSide(
+            color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.10),
+          )),
         ),
-        child: Text(widget.label, style: GoogleFonts.inter(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
+        child: Text(widget.label, style: GoogleFonts.inter(color: textPrimary, fontSize: 11, fontWeight: FontWeight.w800)),
       ),
     );
   }

@@ -34,42 +34,37 @@ class FinRouteSidebar extends StatelessWidget {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        gradient: const LinearGradient(colors: [PayRouteColors.dashboardPrimary, PayRouteColors.dashboardAccentOrange]),
-                        boxShadow: [
-                          BoxShadow(color: PayRouteColors.dashboardPrimary.withValues(alpha: 0.4), blurRadius: 25, spreadRadius: 4),
-                        ],
-                      ),
-                      child: const Icon(Icons.hub, color: Colors.white, size: 22),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'FinRoute.io',
-                      style: GoogleFonts.inter(
-                        color: DashboardPalette.textPrimary(brightness),
-                        fontWeight: FontWeight.w800,
-                        fontSize: 18,
-                      ),
-                    ),
-                  ],
+                padding: const EdgeInsets.only(left: 6, right: 6, top: 6, bottom: 2),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Image.asset(
+                    'assets/images/Dynamic_Logo_for_PayRoute_Africa_1.png',
+                    width: 420,
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
               Expanded(
                 child: ListView(
-                  padding: const EdgeInsets.only(bottom: 12),
+                  padding: EdgeInsets.zero,
                   children: [
                     FinRouteNavItem(
                       label: 'Home',
                       icon: Icons.home,
                       selected: selectedLabel == 'Home',
                       onTap: () => context.go(AppRoutes.dashboard),
+                    ),
+                    FinRouteNavItem(
+                      label: 'Smart Send',
+                      icon: Icons.alt_route,
+                      selected: selectedLabel == 'Smart Send',
+                      onTap: () => context.go(AppRoutes.smartSend),
+                    ),
+                    FinRouteNavItem(
+                      label: 'ROI Analytics',
+                      icon: Icons.analytics,
+                      selected: selectedLabel == 'ROI Analytics',
+                      onTap: () => context.go(AppRoutes.roiAnalytics),
                     ),
                     FinRouteNavItem(
                       label: 'Activity',
@@ -95,12 +90,7 @@ class FinRouteSidebar extends StatelessWidget {
                       selected: selectedLabel == 'Settings',
                       onTap: () => context.go(AppRoutes.settings),
                     ),
-                    FinRouteNavItem(
-                      label: 'Logout',
-                      icon: Icons.logout,
-                      selected: selectedLabel == 'Logout',
-                      onTap: () => context.go(AppRoutes.login),
-                    ),
+
                   ],
                 ),
               ),
@@ -108,41 +98,12 @@ class FinRouteSidebar extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: const _ThemeToggleCard(),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Padding(
-                padding: const EdgeInsets.all(20),
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [DashboardPalette.surface(brightness), DashboardPalette.bg(brightness).withValues(alpha: 0.7)],
-                    ),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: DashboardPalette.border(brightness)),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.06),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(Icons.headset_mic, color: DashboardPalette.iconMuted(brightness), size: 18),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Need help?', style: GoogleFonts.inter(color: DashboardPalette.textPrimary(brightness), fontSize: 12, fontWeight: FontWeight.w700)),
-                          Text('Contact support', style: GoogleFonts.inter(color: DashboardPalette.textSecondary(brightness), fontSize: 10)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _LogoutButton(),
               ),
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -202,6 +163,42 @@ class _ThemeToggleCard extends StatelessWidget {
   }
 }
 
+class _LogoutButton extends StatelessWidget {
+  const _LogoutButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final titleColor = DashboardPalette.textPrimary(brightness);
+    final subtitleColor = DashboardPalette.textSecondary(brightness);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: DashboardPalette.border(brightness)),
+        color: Colors.red.withValues(alpha: brightness == Brightness.dark ? 0.10 : 0.08),
+      ),
+      child: ListTile(
+        onTap: () => context.go(AppRoutes.login),
+        dense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+        leading: Icon(Icons.logout, color: Colors.redAccent),
+        title: Text(
+          'Log Out',
+          style: GoogleFonts.inter(color: titleColor, fontWeight: FontWeight.w800, fontSize: 12),
+        ),
+        subtitle: Text(
+          'Sign out of your account',
+          style: GoogleFonts.inter(color: subtitleColor, fontSize: 10, fontWeight: FontWeight.w600),
+        ),
+        trailing: Icon(Icons.chevron_right, color: DashboardPalette.iconMuted(brightness)),
+      ),
+    );
+  }
+}
+
 class FinRouteNavItem extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -215,7 +212,7 @@ class FinRouteNavItem extends StatelessWidget {
     final brightness = Theme.of(context).brightness;
     final color = selected ? DashboardPalette.textPrimary(brightness) : DashboardPalette.textSecondary(brightness);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeOutCubic,

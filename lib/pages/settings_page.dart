@@ -111,14 +111,6 @@ class _SettingsGlowBackground extends StatelessWidget {
       child: Stack(
         children: [
           Positioned(
-            top: -180,
-            left: -140,
-            child: _GlowCircle(
-              color: _settingsPrimary.withValues(alpha: 0.14),
-              size: 640,
-            ),
-          ),
-          Positioned(
             bottom: -140,
             right: -160,
             child: _GlowCircle(
@@ -390,15 +382,7 @@ class _SectionHeader extends StatelessWidget {
     final textSecondary = DashboardPalette.textSecondary(Theme.of(context).brightness);
     return Row(
       children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: accentColor.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Icon(icon, color: accentColor, size: 24),
-        ),
+        Icon(icon, color: accentColor, size: 24),
         const SizedBox(width: 16),
         Expanded(
           child: Column(
@@ -796,15 +780,7 @@ class _SettingsRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: iconColor, size: 20),
-            ),
+            Icon(icon, color: iconColor, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Column(

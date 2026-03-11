@@ -1,9 +1,12 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:payroute_desktop/nav.dart';
 import 'package:payroute_desktop/theme.dart';
+import 'package:payroute_desktop/models/account_type.dart';
+import 'package:payroute_desktop/utils/animations.dart';
 
 class SelectAccountTypePage extends StatefulWidget {
   const SelectAccountTypePage({super.key});
@@ -12,124 +15,276 @@ class SelectAccountTypePage extends StatefulWidget {
   State<SelectAccountTypePage> createState() => _SelectAccountTypePageState();
 }
 
-enum AccountType { personal, organization }
-
 class _SelectAccountTypePageState extends State<SelectAccountTypePage> {
-  AccountType _selected = AccountType.personal;
+  AccountType _selectedType = AccountType.personal;
 
-  void _returnToWelcome() {
+  void _goBack() {
     final router = GoRouter.of(context);
     if (router.canPop()) {
       context.pop();
       return;
     }
-    context.go(AppRoutes.home);
+    context.go(AppRoutes.login);
   }
 
-  void _continue() {
-    // This flow is intentionally lightweight for now. You can wire the next step
-    // (personal vs org onboarding) once the destination pages are confirmed.
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          _selected == AccountType.personal
-              ? 'Personal account selected. Next step not yet implemented.'
-              : 'Organization account selected. Next step not yet implemented.',
-        ),
-        backgroundColor: PayRouteColors.noirNavy,
-      ),
-    );
+  void _continueSetup() {
+    debugPrint('SelectAccountTypePage: selected account type = $_selectedType');
+    if (_selectedType == AccountType.organization) {
+      // Navigate to entity details for organization onboarding
+      context.push(AppRoutes.entityDetails, extra: _selectedType);
+    } else {
+      // Navigate to the create account form for personal accounts
+      context.push(AppRoutes.createAccount, extra: _selectedType);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: PayRouteColors.noirDark,
+      backgroundColor: const Color(0xFF05080F),
       body: Stack(
-        fit: StackFit.expand,
         children: [
-          const _NoirMeshBackdrop(),
-          Positioned.fill(
-            child: SafeArea(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-                    child: _Header(onBack: _returnToWelcome),
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 1120),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const SizedBox(height: 20),
-                              _StepIntro(),
-                              const SizedBox(height: 44),
-                              LayoutBuilder(
-                                builder: (context, constraints) {
-                                  final isNarrow = constraints.maxWidth < 860;
-                                  final personalCard = AccountTypeCard(
-                                    title: 'Personal Account',
-                                    description:
-                                        'An elite dashboard for individuals seeking seamless multi-rail routing. Send and receive funds across borders with localized efficiency and institutional-grade security.',
-                                    icon: Icons.person,
-                                    active: _selected == AccountType.personal,
-                                    bullets: const ['Cross-border P2P transfers', 'Smart asset management'],
-                                    onTap: () => setState(() => _selected = AccountType.personal),
-                                  );
-                                  final organizationCard = AccountTypeCard(
-                                    title: 'Organization',
-                                    description:
-                                        'Scale your enterprise with our robust API-first architecture. Automated treasury management, bulk payouts, and deep liquidity across the African continent.',
-                                    icon: Icons.corporate_fare,
-                                    active: _selected == AccountType.organization,
-                                    bullets: const ['Full API & Webhook Access', 'Multi-user Treasury Controls'],
-                                    onTap: () => setState(() => _selected = AccountType.organization),
-                                  );
-
-                                  if (isNarrow) {
-                                    return Column(
-                                      children: [
-                                        personalCard,
-                                        const SizedBox(height: 20),
-                                        organizationCard,
-                                      ],
-                                    );
-                                  }
-
-                                  return Row(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: [
-                                      Expanded(child: personalCard),
-                                      const SizedBox(width: 20),
-                                      Expanded(child: organizationCard),
-                                    ],
-                                  );
-                                },
-                              ),
-                              const SizedBox(height: 32),
-                              _BottomPanel(onContinue: _continue),
-                              const SizedBox(height: 16),
-                            ],
-                          ),
+          const _MeshGradientBackground(),
+          SafeArea(
+            child: Column(
+              children: [
+                _Header(onBack: _goBack),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1100),
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 32),
+                            _TitleSection(),
+                            const SizedBox(height: 48),
+                            _AccountTypeCards(
+                              selectedType: _selectedType,
+                              onSelect: (type) => setState(() => _selectedType = type),
+                            ),
+                            const SizedBox(height: 48),
+                            _BottomSection(onContinue: _continueSetup),
+                            const SizedBox(height: 32),
+                          ],
                         ),
                       ),
                     ),
                   ),
-                  const _Footer(),
-                ],
-              ),
+                ),
+                const _Footer(),
+              ],
             ),
           ),
         ],
       ),
     );
   }
+}
+
+class _MeshGradientBackground extends StatefulWidget {
+  const _MeshGradientBackground();
+
+  @override
+  State<_MeshGradientBackground> createState() => _MeshGradientBackgroundState();
+}
+
+class _MeshGradientBackgroundState extends State<_MeshGradientBackground>
+    with TickerProviderStateMixin {
+  late AnimationController _floatController;
+  late AnimationController _pulseController;
+  late AnimationController _particleController;
+
+  @override
+  void initState() {
+    super.initState();
+    _floatController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 15),
+    )..repeat();
+    
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+    
+    _particleController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 30),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _floatController.dispose();
+    _pulseController.dispose();
+    _particleController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Base gradient
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF05080F),
+            gradient: RadialGradient(
+              center: const Alignment(-1.0, -1.0),
+              radius: 1.5,
+              colors: [
+                PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.12),
+                Colors.transparent,
+              ],
+            ),
+          ),
+        ),
+        // Secondary gradient
+        Container(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: const Alignment(1.0, 1.0),
+              radius: 1.5,
+              colors: [
+                const Color(0xFF2563EB).withValues(alpha: 0.08),
+                Colors.transparent,
+              ],
+            ),
+          ),
+        ),
+        
+        // Animated floating orbs
+        AnimatedBuilder(
+          animation: Listenable.merge([_floatController, _pulseController]),
+          builder: (context, _) {
+            final float = _floatController.value * 2 * pi;
+            final pulse = _pulseController.value;
+            
+            return Stack(
+              children: [
+                // Top-left orange glow - floating
+                Positioned(
+                  top: -size.height * 0.2 + sin(float) * 30,
+                  left: -size.width * 0.1 + cos(float * 0.7) * 20,
+                  child: Container(
+                    width: size.width * 0.6 * (1 + pulse * 0.1),
+                    height: size.height * 0.6 * (1 + pulse * 0.1),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.08 + pulse * 0.04),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Bottom-right blue glow - floating
+                Positioned(
+                  bottom: -size.height * 0.2 + cos(float) * 25,
+                  right: -size.width * 0.1 + sin(float * 0.8) * 20,
+                  child: Container(
+                    width: size.width * 0.6,
+                    height: size.height * 0.6,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          const Color(0xFF2563EB).withValues(alpha: 0.04 + pulse * 0.02),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Center subtle glow
+                Positioned(
+                  top: size.height * 0.3 + sin(float * 1.2) * 20,
+                  left: size.width * 0.4 + cos(float) * 30,
+                  child: Container(
+                    width: 300,
+                    height: 300,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          const Color(0xFF8B5CF6).withValues(alpha: 0.03 + pulse * 0.02),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+        
+        // Floating particles
+        AnimatedBuilder(
+          animation: _particleController,
+          builder: (context, _) {
+            return CustomPaint(
+              painter: _FloatingParticlesPainter(
+                progress: _particleController.value,
+                color: PayRouteColors.fintechNoirPrimary,
+              ),
+              size: Size.infinite,
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _FloatingParticlesPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+  final Random _random = Random(42);
+
+  _FloatingParticlesPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+    
+    for (int i = 0; i < 30; i++) {
+      final seed = _random.nextDouble();
+      final x = (_random.nextDouble() + sin((progress + seed) * 2 * pi) * 0.05) % 1.0;
+      final y = (_random.nextDouble() + cos((progress + seed) * 2 * pi) * 0.05) % 1.0;
+      
+      final particleProgress = (progress + seed) % 1.0;
+      final alpha = (0.2 + sin(particleProgress * pi) * 0.3);
+      final radius = 1.5 + _random.nextDouble() * 2;
+      
+      // Glow
+      paint.color = color.withValues(alpha: alpha * 0.3);
+      canvas.drawCircle(
+        Offset(x * size.width, y * size.height),
+        radius * 3,
+        paint,
+      );
+      
+      // Core
+      paint.color = Colors.white.withValues(alpha: alpha);
+      canvas.drawCircle(
+        Offset(x * size.width, y * size.height),
+        radius,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_FloatingParticlesPainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
 
 class _Header extends StatelessWidget {
@@ -139,101 +294,40 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [PayRouteColors.fintechNoirPrimary, PayRouteColors.fintechNoirPrimaryLight],
-                ),
-              ),
-              child: const Icon(Icons.shield, color: PayRouteColors.noirBg, size: 22),
-            ),
-            const SizedBox(width: 10),
-            RichText(
-              text: TextSpan(
-                style: context.textStyles.titleLarge?.copyWith(color: PayRouteColors.white, fontWeight: FontWeight.w800, letterSpacing: -0.2),
-                children: const [
-                  TextSpan(text: 'FINTECH'),
-                  TextSpan(text: 'NOIR', style: TextStyle(color: PayRouteColors.fintechNoirPrimary)),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Logo
+          Image.asset(
+            'assets/images/Dynamic.png',
+            height: 80,
+            fit: BoxFit.contain,
+          ),
+          // Back button
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: onBack,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.arrow_back,
+                    size: 16,
+                    color: Colors.white.withValues(alpha: 0.5),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Return to Welcome',
+                    style: context.textStyles.bodySmall?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.5),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ],
               ),
             ),
-          ],
-        ),
-        TextButton.icon(
-          onPressed: onBack,
-          style: TextButton.styleFrom(
-            foregroundColor: PayRouteColors.textMuted,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          ),
-          icon: const Icon(Icons.arrow_back, size: 16, color: PayRouteColors.textMuted),
-          label: Text(
-            'Return to Welcome',
-            style: context.textStyles.bodySmall?.copyWith(color: PayRouteColors.textMuted, fontWeight: FontWeight.w700),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _StepIntro extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 720),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            decoration: BoxDecoration(
-              color: PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.22)),
-            ),
-            child: Text(
-              'STEP 01: IDENTIFICATION',
-              style: context.textStyles.labelSmall?.copyWith(
-                color: PayRouteColors.fintechNoirPrimary,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.3,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          RichText(
-            textAlign: TextAlign.center,
-            text: TextSpan(
-              style: context.textStyles.displayMedium?.copyWith(color: PayRouteColors.white, fontWeight: FontWeight.w900, height: 1.05),
-              children: [
-                const TextSpan(text: 'Choose your '),
-                TextSpan(
-                  text: 'pathway',
-                  style: context.textStyles.displayMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    foreground: Paint()
-                      ..shader = const LinearGradient(
-                        colors: [PayRouteColors.fintechNoirPrimary, PayRouteColors.fintechNoirPrimaryLight],
-                      ).createShader(const Rect.fromLTWH(0, 0, 420, 80)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            'Select the account type that best aligns with your financial infrastructure requirements in the African market.',
-            textAlign: TextAlign.center,
-            style: context.textStyles.bodyLarge?.copyWith(color: PayRouteColors.white.withValues(alpha: 0.45)),
           ),
         ],
       ),
@@ -241,137 +335,459 @@ class _StepIntro extends StatelessWidget {
   }
 }
 
-class AccountTypeCard extends StatefulWidget {
-  final String title;
-  final String description;
-  final IconData icon;
-  final bool active;
-  final List<String> bullets;
+class _TitleSection extends StatefulWidget {
+  @override
+  State<_TitleSection> createState() => _TitleSectionState();
+}
+
+class _TitleSectionState extends State<_TitleSection>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _badgeFade;
+  late Animation<double> _titleFade;
+  late Animation<double> _subtitleFade;
+  late Animation<Offset> _badgeSlide;
+  late Animation<Offset> _titleSlide;
+  late Animation<Offset> _subtitleSlide;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+
+    _badgeFade = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0, 0.4, curve: Curves.easeOut)),
+    );
+    _titleFade = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.6, curve: Curves.easeOut)),
+    );
+    _subtitleFade = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.4, 0.8, curve: Curves.easeOut)),
+    );
+
+    _badgeSlide = Tween<Offset>(begin: const Offset(0, -20), end: Offset.zero).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0, 0.4, curve: Curves.easeOutCubic)),
+    );
+    _titleSlide = Tween<Offset>(begin: const Offset(0, 30), end: Offset.zero).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.2, 0.6, curve: Curves.easeOutCubic)),
+    );
+    _subtitleSlide = Tween<Offset>(begin: const Offset(0, 20), end: Offset.zero).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.4, 0.8, curve: Curves.easeOutCubic)),
+    );
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Column(
+          children: [
+            // Step badge - animated
+            Transform.translate(
+              offset: _badgeSlide.value,
+              child: Opacity(
+                opacity: _badgeFade.value,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(50),
+                    border: Border.all(
+                      color: PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.20),
+                    ),
+                  ),
+                  child: Text(
+                    'STEP 01: IDENTIFICATION',
+                    style: context.textStyles.labelSmall?.copyWith(
+                      color: PayRouteColors.fintechNoirPrimary,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 2,
+                      fontSize: 10,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Title - animated
+            Transform.translate(
+              offset: _titleSlide.value,
+              child: Opacity(
+                opacity: _titleFade.value,
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: 'Choose your ',
+                        style: context.textStyles.displaySmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      TextSpan(
+                        text: 'pathway',
+                        style: context.textStyles.displaySmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.5,
+                          foreground: Paint()
+                            ..shader = const LinearGradient(
+                              colors: [
+                                PayRouteColors.fintechNoirPrimary,
+                                PayRouteColors.fintechNoirPrimaryLight,
+                              ],
+                            ).createShader(const Rect.fromLTWH(0, 0, 200, 50)),
+                        ),
+                      ),
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Subtitle - animated
+            Transform.translate(
+              offset: _subtitleSlide.value,
+              child: Opacity(
+                opacity: _subtitleFade.value,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: Text(
+                    'Select the account type that best aligns with your financial infrastructure requirements in the African market.',
+                    textAlign: TextAlign.center,
+                    style: context.textStyles.bodyLarge?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.40),
+                      height: 1.6,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _AccountTypeCards extends StatefulWidget {
+  final AccountType selectedType;
+  final ValueChanged<AccountType> onSelect;
+
+  const _AccountTypeCards({
+    required this.selectedType,
+    required this.onSelect,
+  });
+
+  @override
+  State<_AccountTypeCards> createState() => _AccountTypeCardsState();
+}
+
+class _AccountTypeCardsState extends State<_AccountTypeCards>
+    with TickerProviderStateMixin {
+  late AnimationController _card1Controller;
+  late AnimationController _card2Controller;
+  late Animation<double> _card1Fade;
+  late Animation<double> _card2Fade;
+  late Animation<Offset> _card1Slide;
+  late Animation<Offset> _card2Slide;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    _card1Controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _card2Controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _card1Fade = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _card1Controller, curve: Curves.easeOutCubic),
+    );
+    _card2Fade = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _card2Controller, curve: Curves.easeOutCubic),
+    );
+
+    _card1Slide = Tween<Offset>(begin: const Offset(-40, 0), end: Offset.zero).animate(
+      CurvedAnimation(parent: _card1Controller, curve: Curves.easeOutCubic),
+    );
+    _card2Slide = Tween<Offset>(begin: const Offset(40, 0), end: Offset.zero).animate(
+      CurvedAnimation(parent: _card2Controller, curve: Curves.easeOutCubic),
+    );
+
+    // Staggered start
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (mounted) _card1Controller.forward();
+    });
+    Future.delayed(const Duration(milliseconds: 550), () {
+      if (mounted) _card2Controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _card1Controller.dispose();
+    _card2Controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 700;
+        
+        final card1 = AnimatedBuilder(
+          animation: _card1Controller,
+          builder: (context, child) => Transform.translate(
+            offset: _card1Slide.value,
+            child: Opacity(opacity: _card1Fade.value, child: child),
+          ),
+          child: _AccountTypeCard(
+            type: AccountType.personal,
+            isSelected: widget.selectedType == AccountType.personal,
+            onTap: () => widget.onSelect(AccountType.personal),
+          ),
+        );
+
+        final card2 = AnimatedBuilder(
+          animation: _card2Controller,
+          builder: (context, child) => Transform.translate(
+            offset: _card2Slide.value,
+            child: Opacity(opacity: _card2Fade.value, child: child),
+          ),
+          child: _AccountTypeCard(
+            type: AccountType.organization,
+            isSelected: widget.selectedType == AccountType.organization,
+            onTap: () => widget.onSelect(AccountType.organization),
+          ),
+        );
+        
+        if (isWide) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: card1),
+              const SizedBox(width: 24),
+              Expanded(child: card2),
+            ],
+          );
+        }
+        
+        return Column(
+          children: [
+            card1,
+            const SizedBox(height: 24),
+            card2,
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _AccountTypeCard extends StatefulWidget {
+  final AccountType type;
+  final bool isSelected;
   final VoidCallback onTap;
 
-  const AccountTypeCard({
-    super.key,
-    required this.title,
-    required this.description,
-    required this.icon,
-    required this.active,
-    required this.bullets,
+  const _AccountTypeCard({
+    required this.type,
+    required this.isSelected,
     required this.onTap,
   });
 
   @override
-  State<AccountTypeCard> createState() => _AccountTypeCardState();
+  State<_AccountTypeCard> createState() => _AccountTypeCardState();
 }
 
-class _AccountTypeCardState extends State<AccountTypeCard> {
-  bool _hovered = false;
+class _AccountTypeCardState extends State<_AccountTypeCard> {
+  bool _isHovered = false;
 
   @override
   Widget build(BuildContext context) {
-    final baseBorder = widget.active
-        ? PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.65)
-        : PayRouteColors.white.withValues(alpha: 0.08);
-    final hoverBorder = PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.35);
-    final borderColor = _hovered ? hoverBorder : baseBorder;
-    final lift = (_hovered ? 8.0 : 0.0) + (widget.active ? 2.0 : 0.0);
-    final glow = widget.active ? 0.10 : (_hovered ? 0.06 : 0.0);
+    final isPersonal = widget.type == AccountType.personal;
+    
+    final title = isPersonal ? 'Personal Account' : 'Organization';
+    final description = isPersonal
+        ? 'An elite dashboard for individuals seeking seamless multi-rail routing. Send and receive funds across borders with localized efficiency and institutional-grade security.'
+        : 'Scale your enterprise with our robust API-first architecture. Automated treasury management, bulk payouts, and deep liquidity across the African continent.';
+    final features = isPersonal
+        ? ['Cross-border P2P transfers', 'Smart asset management']
+        : ['Full API & Webhook Access', 'Multi-user Treasury Controls'];
+    final icon = isPersonal ? Icons.person : Icons.corporate_fare;
 
     return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: widget.onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 420),
+          duration: const Duration(milliseconds: 300),
           curve: Curves.easeOutCubic,
-          transform: Matrix4.identity()..translate(0.0, -lift)..scale(_hovered ? 1.01 : 1.0),
-          padding: const EdgeInsets.all(28),
+          transform: Matrix4.identity()
+            ..translate(0.0, _isHovered ? -8.0 : 0.0)
+            ..scale(_isHovered ? 1.02 : 1.0),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(32),
+            borderRadius: BorderRadius.circular(24),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: widget.active
+              colors: widget.isSelected
                   ? [
-                      PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.06),
-                      PayRouteColors.white.withValues(alpha: 0.02),
+                      PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.05),
+                      Colors.white.withValues(alpha: 0.02),
                     ]
                   : [
-                      PayRouteColors.white.withValues(alpha: 0.035),
-                      PayRouteColors.white.withValues(alpha: 0.012),
+                      Colors.white.withValues(alpha: _isHovered ? 0.06 : 0.03),
+                      Colors.white.withValues(alpha: _isHovered ? 0.02 : 0.01),
                     ],
             ),
-            border: Border.all(color: borderColor, width: 1),
-            boxShadow: [
-              if (glow > 0)
-                BoxShadow(
-                  color: PayRouteColors.fintechNoirPrimary.withValues(alpha: glow),
-                  blurRadius: 42,
-                  offset: const Offset(0, 18),
-                ),
-              BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 36, offset: const Offset(0, 18)),
-            ],
-          ),
-          child: Stack(
-            children: [
-              Positioned(
-                top: 2,
-                right: 2,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 260),
-                  curve: Curves.easeOut,
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: widget.active
-                          ? PayRouteColors.fintechNoirPrimary
-                          : PayRouteColors.white.withValues(alpha: _hovered ? 0.25 : 0.16),
-                      width: 2,
+            border: Border.all(
+              color: widget.isSelected
+                  ? PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.6)
+                  : _isHovered
+                      ? PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.3)
+                      : Colors.white.withValues(alpha: 0.06),
+              width: 1,
+            ),
+            boxShadow: widget.isSelected
+                ? [
+                    BoxShadow(
+                      color: PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.10),
+                      blurRadius: 40,
+                      spreadRadius: 0,
                     ),
-                  ),
-                  child: Center(
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 260),
-                      curve: Curves.easeOut,
-                      width: 14,
-                      height: 14,
+                  ]
+                : _isHovered
+                    ? [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          blurRadius: 50,
+                          offset: const Offset(0, 25),
+                        ),
+                        BoxShadow(
+                          color: PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.05),
+                          blurRadius: 20,
+                        ),
+                      ]
+                    : null,
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Radio indicator
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        _RadioIndicator(isSelected: widget.isSelected),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Icon container
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      width: 80,
+                      height: 80,
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: widget.active ? PayRouteColors.fintechNoirPrimary : Colors.transparent,
+                        borderRadius: BorderRadius.circular(16),
+                        color: widget.isSelected
+                            ? PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.10)
+                            : Colors.white.withValues(alpha: 0.05),
+                        border: Border.all(
+                          color: widget.isSelected
+                              ? PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.20)
+                              : Colors.white.withValues(alpha: 0.10),
+                        ),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          icon,
+                          size: 40,
+                          color: widget.isSelected || _isHovered
+                              ? PayRouteColors.fintechNoirPrimary
+                              : Colors.white.withValues(alpha: 0.40),
+                        ),
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 24),
+                    // Title
+                    Text(
+                      title,
+                      style: context.textStyles.headlineSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Description
+                    Text(
+                      description,
+                      style: context.textStyles.bodyMedium?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.60),
+                        height: 1.6,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Divider
+                    Container(
+                      height: 1,
+                      color: Colors.white.withValues(alpha: 0.05),
+                    ),
+                    const SizedBox(height: 24),
+                    // Features
+                    ...features.map((feature) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle,
+                            size: 20,
+                            color: widget.isSelected || _isHovered
+                                ? PayRouteColors.fintechNoirPrimary
+                                : Colors.white.withValues(alpha: 0.20),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              feature,
+                              style: context.textStyles.bodyMedium?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.80),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )),
+                  ],
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _IconTile(icon: widget.icon, active: widget.active, hovered: _hovered),
-                  const SizedBox(height: 18),
-                  Text(
-                    widget.title,
-                    style: context.textStyles.headlineSmall?.copyWith(color: PayRouteColors.white, fontWeight: FontWeight.w900, letterSpacing: -0.5),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    widget.description,
-                    style: context.textStyles.bodyMedium?.copyWith(color: PayRouteColors.white.withValues(alpha: 0.62), height: 1.55),
-                  ),
-                  const SizedBox(height: 18),
-                  Container(
-                    height: 1,
-                    color: PayRouteColors.white.withValues(alpha: 0.06),
-                  ),
-                  const SizedBox(height: 16),
-                  for (final bullet in widget.bullets) ...[
-                    _FeatureRow(active: widget.active, hovered: _hovered, label: bullet),
-                    const SizedBox(height: 10),
-                  ],
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -379,53 +795,126 @@ class _AccountTypeCardState extends State<AccountTypeCard> {
   }
 }
 
-class _IconTile extends StatelessWidget {
-  final IconData icon;
-  final bool active;
-  final bool hovered;
+class _RadioIndicator extends StatelessWidget {
+  final bool isSelected;
 
-  const _IconTile({required this.icon, required this.active, required this.hovered});
+  const _RadioIndicator({required this.isSelected});
 
   @override
   Widget build(BuildContext context) {
-    final isHighlighted = active || hovered;
-    final bg = isHighlighted ? PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.12) : PayRouteColors.white.withValues(alpha: 0.05);
-    final border = isHighlighted ? PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.22) : PayRouteColors.white.withValues(alpha: 0.10);
-    final iconColor = isHighlighted ? PayRouteColors.fintechNoirPrimary : PayRouteColors.white.withValues(alpha: 0.45);
-
-    return Container(
-      width: 92,
-      height: 92,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      width: 28,
+      height: 28,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        color: bg,
-        border: Border.all(color: border),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: isSelected
+              ? PayRouteColors.fintechNoirPrimary
+              : Colors.white.withValues(alpha: 0.20),
+          width: 2,
+        ),
       ),
       child: Center(
-        child: Icon(icon, size: 44, color: iconColor),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: isSelected ? 14 : 0,
+          height: isSelected ? 14 : 0,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isSelected ? PayRouteColors.fintechNoirPrimary : Colors.transparent,
+          ),
+        ),
       ),
     );
   }
 }
 
-class _FeatureRow extends StatelessWidget {
-  final bool active;
-  final bool hovered;
-  final String label;
+class _BottomSection extends StatelessWidget {
+  final VoidCallback onContinue;
 
-  const _FeatureRow({required this.active, required this.hovered, required this.label});
+  const _BottomSection({required this.onContinue});
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = (active || hovered) ? PayRouteColors.fintechNoirPrimary : PayRouteColors.white.withValues(alpha: 0.18);
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.03),
+            Colors.white.withValues(alpha: 0.01),
+          ],
+        ),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.06),
+        ),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth > 600;
+          
+          if (isWide) {
+            return Row(
+              children: [
+                Expanded(child: _InfoText()),
+                const SizedBox(width: 24),
+                _ContinueButton(onPressed: onContinue),
+              ],
+            );
+          }
+          
+          return Column(
+            children: [
+              _InfoText(),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: _ContinueButton(onPressed: onContinue),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _InfoText extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(Icons.check_circle, size: 18, color: iconColor),
-        const SizedBox(width: 10),
+        Icon(
+          Icons.info_outline,
+          size: 28,
+          color: PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.60),
+        ),
+        const SizedBox(width: 16),
         Expanded(
-          child: Text(
-            label,
-            style: context.textStyles.bodyMedium?.copyWith(color: PayRouteColors.white.withValues(alpha: 0.82)),
+          child: Text.rich(
+            TextSpan(
+              style: context.textStyles.bodySmall?.copyWith(
+                color: Colors.white.withValues(alpha: 0.50),
+                height: 1.5,
+              ),
+              children: [
+                const TextSpan(
+                  text: 'You can upgrade from Personal to Organization later. Need assistance? ',
+                ),
+                TextSpan(
+                  text: 'Talk to an advisor',
+                  style: TextStyle(
+                    color: PayRouteColors.fintechNoirPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const TextSpan(text: '.'),
+              ],
+            ),
           ),
         ),
       ],
@@ -433,126 +922,67 @@ class _FeatureRow extends StatelessWidget {
   }
 }
 
-class _BottomPanel extends StatelessWidget {
-  final VoidCallback onContinue;
-
-  const _BottomPanel({required this.onContinue});
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 32, sigmaY: 32),
-        child: Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                PayRouteColors.white.withValues(alpha: 0.035),
-                PayRouteColors.white.withValues(alpha: 0.012),
-              ],
-            ),
-            border: Border.all(color: PayRouteColors.white.withValues(alpha: 0.08)),
-          ),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final isNarrow = constraints.maxWidth < 720;
-              final left = Row(
-                children: [
-                  Icon(Icons.info_outline, color: PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.7), size: 26),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'You can upgrade from Personal to Organization later. Need assistance? Talk to an advisor.',
-                      style: context.textStyles.bodySmall?.copyWith(color: PayRouteColors.white.withValues(alpha: 0.55), height: 1.5),
-                    ),
-                  ),
-                ],
-              );
-
-              final button = _OrangeGlowButton(onPressed: onContinue);
-
-              if (isNarrow) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    left,
-                    const SizedBox(height: 14),
-                    button,
-                  ],
-                );
-              }
-
-              return Row(
-                children: [
-                  Expanded(child: left),
-                  const SizedBox(width: 16),
-                  SizedBox(width: 260, child: button),
-                ],
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _OrangeGlowButton extends StatefulWidget {
+class _ContinueButton extends StatefulWidget {
   final VoidCallback onPressed;
 
-  const _OrangeGlowButton({required this.onPressed});
+  const _ContinueButton({required this.onPressed});
 
   @override
-  State<_OrangeGlowButton> createState() => _OrangeGlowButtonState();
+  State<_ContinueButton> createState() => _ContinueButtonState();
 }
 
-class _OrangeGlowButtonState extends State<_OrangeGlowButton> {
-  bool _hovered = false;
+class _ContinueButtonState extends State<_ContinueButton> {
+  bool _isHovered = false;
 
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: widget.onPressed,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          duration: const Duration(milliseconds: 200),
+          transform: Matrix4.identity()..translate(0.0, _isHovered ? -2.0 : 0.0),
+          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(16),
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [PayRouteColors.fintechNoirPrimary, PayRouteColors.fintechNoirPrimaryLight],
+              colors: [
+                PayRouteColors.fintechNoirPrimary,
+                PayRouteColors.fintechNoirPrimaryLight,
+              ],
             ),
             boxShadow: [
               BoxShadow(
-                color: PayRouteColors.fintechNoirPrimary.withValues(alpha: _hovered ? 0.40 : 0.26),
-                blurRadius: _hovered ? 46 : 34,
-                offset: const Offset(0, 14),
+                color: PayRouteColors.fintechNoirPrimary.withValues(alpha: _isHovered ? 0.40 : 0.25),
+                blurRadius: _isHovered ? 40 : 30,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'Continue Setup',
-                style: context.textStyles.titleMedium?.copyWith(color: PayRouteColors.noirBg, fontWeight: FontWeight.w900, letterSpacing: 0.1),
+                style: context.textStyles.titleMedium?.copyWith(
+                  color: const Color(0xFF05080F),
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               AnimatedSlide(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOut,
-                offset: _hovered ? const Offset(0.12, 0) : Offset.zero,
-                child: const Icon(Icons.arrow_forward, color: PayRouteColors.noirBg, size: 18),
+                duration: const Duration(milliseconds: 200),
+                offset: _isHovered ? const Offset(0.2, 0) : Offset.zero,
+                child: const Icon(
+                  Icons.arrow_forward,
+                  color: Color(0xFF05080F),
+                  size: 20,
+                ),
               ),
             ],
           ),
@@ -568,77 +998,50 @@ class _Footer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 18),
-      decoration: BoxDecoration(border: Border(top: BorderSide(color: PayRouteColors.white.withValues(alpha: 0.06)))),
-      child: Text(
-        '© 2024 Fintech Noir Africa. All Rights Reserved.',
-        textAlign: TextAlign.center,
-        style: context.textStyles.labelSmall?.copyWith(color: PayRouteColors.white.withValues(alpha: 0.22), letterSpacing: 1.4),
-      ),
-    );
-  }
-}
-
-class _NoirMeshBackdrop extends StatelessWidget {
-  const _NoirMeshBackdrop();
-
-  static const String textureUrl =
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDusnzvMo6aVuvjp479_KtpYn3n9V3ne82nGF1sfqi3HIKzeH9HQ4WqFvzfL9SxQMwmkPISMFxsZuiCSIMBgnq8x1X-NhUJTpS6Sz02mHgdXA3e2-KOYg9OtTSAhlt0ssxObeADjE0qEsvh7CdiAQfGRC6P6zuznrE6cS0jIALlQBkyI8HCeKbiDydpoG9qybbpxpaOR1eRVnf5K1na8YuVt7sjgyL-PydxYisFWI30sbqpEHkNaz47OIO56Hr2v-uKP4whqCl6nkRU';
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [PayRouteColors.noirBg, PayRouteColors.noirDark],
-                ),
-              ),
-            ),
-            // Mesh-like radial gradients (subtle, “premium glass”)
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: const Alignment(-1.0, -1.0),
-                  radius: 1.05,
-                  colors: [
-                    PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.12),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.45],
-                ),
-              ),
-            ),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: const Alignment(1.0, 1.0),
-                  radius: 1.08,
-                  colors: [
-                    Colors.blue.withValues(alpha: 0.08),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.45],
-                ),
-              ),
-            ),
-            Opacity(
-              opacity: 0.02,
-              child: Image.network(
-                textureUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-              ),
-            ),
-          ],
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(
+            color: Colors.white.withValues(alpha: 0.05),
+          ),
         ),
+      ),
+      child: Column(
+        children: [
+          // Security badges
+          Opacity(
+            opacity: 0.30,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'SECURED BY',
+                  style: context.textStyles.labelSmall?.copyWith(
+                    color: Colors.white,
+                    letterSpacing: 2,
+                    fontSize: 10,
+                  ),
+                ),
+                const SizedBox(width: 24),
+                const Icon(Icons.security, color: Colors.white, size: 20),
+                const SizedBox(width: 16),
+                const Icon(Icons.verified_user, color: Colors.white, size: 20),
+                const SizedBox(width: 16),
+                const Icon(Icons.lock, color: Colors.white, size: 20),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Copyright
+          Text(
+            '© 2024 FINTECH NOIR AFRICA. ALL RIGHTS RESERVED.',
+            style: context.textStyles.labelSmall?.copyWith(
+              color: Colors.white.withValues(alpha: 0.20),
+              letterSpacing: 2,
+              fontSize: 10,
+            ),
+          ),
+        ],
       ),
     );
   }

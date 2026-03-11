@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:payroute_desktop/theme.dart';
 import 'package:payroute_desktop/widgets/finroute_responsive_scaffold.dart';
+import 'package:payroute_desktop/providers/auth_provider.dart';
 
 class ActivityPage extends StatelessWidget {
   const ActivityPage({super.key});
@@ -150,33 +152,48 @@ class _ActivityHeader extends StatelessWidget {
           ],
         );
 
-        final avatar = Stack(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: border),
-                image: const DecorationImage(
-                  image: NetworkImage(
-                    'https://lh3.googleusercontent.com/aida-public/AB6AXuDIaCwDhxVyzTNPQbH6aaAvTB4kSusDv5bbYxEyGKb-1TPNRJk91FgmYmUXT0i8vx_rEyeiQxswISwl2k6YhPpF6d7qSqQ0mrrCPu_XpvzN_trba7SfY6EpmkKfdalH8K0Mm6lt6rVQdGweDb1PDRrudp21TTAMVmdeBLRsYyk0GZI8DhfWA-L90GYjvQbC3HfDiejXV3gCK4z_SmqjrS3TWliIRISkjuUcRqa_TlHL6rFb-MaL5LgFCZVt6Rl_zueXYSIRlwEvITx8',
-                  ),
-                  fit: BoxFit.cover,
+        Widget _buildAvatar(String? photoUrl, String initials, Color border, Color bg) {
+          return Stack(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: border),
+                  image: photoUrl != null
+                      ? DecorationImage(
+                          image: NetworkImage(photoUrl),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                  color: photoUrl == null ? PayRouteColors.dashboardPrimary : null,
+                ),
+                child: photoUrl == null
+                    ? Center(
+                        child: Text(
+                          initials,
+                          style: GoogleFonts.inter(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                          ),
+                        ),
+                      )
+                    : null,
+              ),
+              Positioned(
+                bottom: 2,
+                right: 2,
+                child: Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(color: PayRouteColors.dashboardGreen, shape: BoxShape.circle, border: Border.all(color: bg, width: 2)),
                 ),
               ),
-            ),
-            Positioned(
-              bottom: 2,
-              right: 2,
-              child: Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(color: PayRouteColors.dashboardGreen, shape: BoxShape.circle, border: Border.all(color: bg, width: 2)),
-              ),
-            ),
-          ],
-        );
+            ],
+          );
+        }
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
@@ -194,16 +211,32 @@ class _ActivityHeader extends StatelessWidget {
               notif,
               const SizedBox(width: 12),
               if (!isTight) ...[
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text('Tunde A.', style: GoogleFonts.inter(color: textPrimary, fontWeight: FontWeight.w700), overflow: TextOverflow.ellipsis),
-                    Text('Admin', style: GoogleFonts.inter(color: textSecondary, fontSize: 12)),
-                  ],
+                Consumer<AuthProvider>(
+                  builder: (context, authProvider, _) {
+                    final user = authProvider.userModel;
+                    final firebaseUser = authProvider.firebaseUser;
+                    final displayName = user?.displayName ?? firebaseUser?.email?.split('@')[0] ?? 'User';
+                    final displayRole = user?.displayRole ?? 'User';
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(displayName, style: GoogleFonts.inter(color: textPrimary, fontWeight: FontWeight.w700), overflow: TextOverflow.ellipsis),
+                        Text(displayRole, style: GoogleFonts.inter(color: textSecondary, fontSize: 12)),
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(width: 12),
               ],
-              avatar,
+              Consumer<AuthProvider>(
+                builder: (context, authProvider, _) {
+                  final user = authProvider.userModel;
+                  final firebaseUser = authProvider.firebaseUser;
+                  final photoUrl = user?.photoUrl ?? firebaseUser?.photoURL;
+                  final initials = user?.initials ?? 'U';
+                  return _buildAvatar(photoUrl, initials, border, bg);
+                },
+              ),
             ],
           ),
         );
@@ -509,89 +542,7 @@ class _ActivityTable extends StatelessWidget {
 
   const _ActivityTable({required this.brightness});
 
-  static const _rows = <_ActivityRowData>[
-    _ActivityRowData(
-      initials: 'EO',
-      name: 'Emmanuel Okafor',
-      id: '#TRX-88291',
-      type: 'Send',
-      typeIcon: Icons.arrow_outward,
-      typeColor: PayRouteColors.dashboardPrimary,
-      date: 'Oct 24, 2023',
-      time: '09:42 AM',
-      railLeft: 'M-Pesa',
-      railRight: 'Flutterwave',
-      status: 'Completed',
-      statusColor: PayRouteColors.dashboardGreen,
-      amount: '₦ 250,000.00',
-      meta: 'Fee: ₦150',
-    ),
-    _ActivityRowData(
-      initials: 'SJ',
-      name: 'Sarah Jenkins',
-      id: '#TRX-88290',
-      type: 'Exchange',
-      typeIcon: Icons.swap_horiz,
-      typeColor: PayRouteColors.dashboardAccentOrange,
-      date: 'Oct 24, 2023',
-      time: '09:15 AM',
-      railLeft: 'USDC',
-      railRight: 'NGN Bank',
-      status: 'Pending',
-      statusColor: Color(0xFFF59E0B),
-      amount: r'$ 1,500.00',
-      meta: r'Rate: ₦1050/$',
-    ),
-    _ActivityRowData(
-      initials: 'MT',
-      name: 'Michael Taiwo',
-      id: '#TRX-88289',
-      type: 'Receive',
-      typeIcon: Icons.arrow_downward,
-      typeColor: PayRouteColors.dashboardGreen,
-      date: 'Oct 23, 2023',
-      time: '04:20 PM',
-      railLeft: 'Card (Visa)',
-      railRight: 'Wallet',
-      status: 'Failed',
-      statusColor: Color(0xFFEF4444),
-      amount: '₦ 15,000.00',
-      meta: 'Network Err',
-      amountFailed: true,
-    ),
-    _ActivityRowData(
-      initials: 'AZ',
-      name: 'Azure Cloud Svc',
-      id: '#TRX-88288',
-      type: 'Payment',
-      typeIcon: Icons.arrow_outward,
-      typeColor: PayRouteColors.dashboardPrimary,
-      date: 'Oct 23, 2023',
-      time: '02:30 PM',
-      railLeft: 'Wallet',
-      railRight: 'Direct Debit',
-      status: 'Completed',
-      statusColor: PayRouteColors.dashboardGreen,
-      amount: r'$ 129.99',
-      meta: 'Sub ID: #8892',
-    ),
-    _ActivityRowData(
-      initials: 'KW',
-      name: 'Kenya Waters Ltd',
-      id: '#TRX-88285',
-      type: 'Bill Pay',
-      typeIcon: Icons.arrow_outward,
-      typeColor: PayRouteColors.dashboardPrimary,
-      date: 'Oct 23, 2023',
-      time: '11:05 AM',
-      railLeft: 'M-Pesa',
-      railRight: 'Utility API',
-      status: 'Completed',
-      statusColor: PayRouteColors.dashboardGreen,
-      amount: 'KSh 4,500.00',
-      meta: 'Auto-Pay',
-    ),
-  ];
+  static const _rows = <_ActivityRowData>[];
 
   @override
   Widget build(BuildContext context) {
@@ -608,18 +559,21 @@ class _ActivityTable extends StatelessWidget {
         child: Column(
           children: [
             _TableHeader(brightness: brightness),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minWidth: 980),
-                child: Column(
-                  children: [
-                    for (final row in _rows) _TableRow(row: row, brightness: brightness),
-                  ],
+            if (_rows.isEmpty)
+              _EmptyState(brightness: brightness)
+            else
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 980),
+                  child: Column(
+                    children: [
+                      for (final row in _rows) _TableRow(row: row, brightness: brightness),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            _TableFooter(brightness: brightness),
+            if (_rows.isNotEmpty) _TableFooter(brightness: brightness),
           ],
         ),
       ),
@@ -952,6 +906,31 @@ class _PagerButton extends StatelessWidget {
           border: Border.all(color: border),
         ),
         child: Text(label, style: GoogleFonts.inter(color: textSecondary, fontSize: 12, fontWeight: FontWeight.w700)),
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  final Brightness brightness;
+
+  const _EmptyState({required this.brightness});
+
+  @override
+  Widget build(BuildContext context) {
+    final textSecondary = DashboardPalette.textSecondary(brightness);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 40),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.inbox_outlined, size: 48, color: textSecondary.withValues(alpha: 0.5)),
+          const SizedBox(height: 16),
+          Text(
+            'No transactions yet',
+            style: GoogleFonts.inter(color: textSecondary, fontSize: 14, fontWeight: FontWeight.w600),
+          ),
+        ],
       ),
     );
   }
