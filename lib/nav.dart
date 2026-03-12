@@ -13,9 +13,13 @@ import 'package:payroute_desktop/pages/authorized_rep_page.dart';
 import 'package:payroute_desktop/pages/ownership_page.dart';
 import 'package:payroute_desktop/pages/review_page.dart';
 import 'package:payroute_desktop/pages/success_page.dart';
+import 'package:payroute_desktop/pages/wallet_page.dart';
+import 'package:payroute_desktop/pages/payment_links_page.dart';
+import 'package:payroute_desktop/pages/cross_border_page.dart';
 import 'package:payroute_desktop/pages/smart_send_page.dart';
 import 'package:payroute_desktop/pages/roi_analytics_page.dart';
-import 'package:payroute_desktop/pages/cross_border_page.dart';
+import 'package:payroute_desktop/pages/saving_goals_page.dart';
+
 import 'package:payroute_desktop/models/account_type.dart';
 import 'package:payroute_desktop/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
@@ -238,6 +242,13 @@ class AppRouter {
         ),
       ),
       GoRoute(
+        path: AppRoutes.savingGoals,
+        name: 'savingGoals',
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: SavingGoalsPage(),
+        ),
+      ),
+      GoRoute(
         path: AppRoutes.roiAnalytics,
         name: 'roiAnalytics',
         pageBuilder: (context, state) => const NoTransitionPage(
@@ -256,6 +267,13 @@ class AppRouter {
         name: 'cards',
         pageBuilder: (context, state) => const NoTransitionPage(
           child: CardsPage(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.paymentLinks,
+        name: 'payment-links',
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: PaymentLinksPage(),
         ),
       ),
       GoRoute(
@@ -332,8 +350,10 @@ class AppRoutes {
   static const String activity = '/activity';
   static const String exchange = '/exchange';
   static const String cards = '/cards';
+  static const String paymentLinks = '/payment-links';
   static const String settings = '/settings';
   static const String smartSend = '/smart-send';
+  static const String savingGoals = '/saving-goals';
   static const String roiAnalytics = '/roi-analytics';
   static const String crossBorder = '/cross-border';
 }

@@ -27,8 +27,9 @@ class _ROIAnalyticsPageState extends State<ROIAnalyticsPage> {
           final isWide = constraints.maxWidth > 1200;
           if (isWide) {
             return Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(child: _buildMainContent(context)),
+                Expanded(child: _buildMainContent(context, isWide: true)),
                 _buildRightSidebar(context),
               ],
             );
@@ -36,7 +37,7 @@ class _ROIAnalyticsPageState extends State<ROIAnalyticsPage> {
           return SingleChildScrollView(
             child: Column(
               children: [
-                _buildMainContent(context),
+                _buildMainContent(context, isWide: false),
                 _buildRightSidebar(context, isCompact: true),
               ],
             ),
@@ -46,86 +47,88 @@ class _ROIAnalyticsPageState extends State<ROIAnalyticsPage> {
     );
   }
 
-  Widget _buildMainContent(BuildContext context) {
+  Widget _buildMainContent(BuildContext context, {required bool isWide}) {
     final brightness = Theme.of(context).brightness;
     final textPrimary = DashboardPalette.textPrimary(brightness);
     final textSecondary = DashboardPalette.textSecondary(brightness);
+
+    final content = Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Savings Timeline',
+                      style: GoogleFonts.inter(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Visualize cumulative cost reduction achieved through intelligent routing logic versus standard provider fees.',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 24),
+              Row(
+                children: [
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: PayRouteColors.vibrantOrange,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: PayRouteColors.vibrantOrange.withValues(alpha: 0.5),
+                          blurRadius: 8,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'LIVE CALCULATION',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: PayRouteColors.vibrantOrange,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          isWide
+              ? Expanded(child: _buildSavingsChart(context))
+              : SizedBox(height: 400, child: _buildSavingsChart(context)),
+        ],
+      ),
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHeader(context),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Savings Timeline',
-                            style: GoogleFonts.inter(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Visualize cumulative cost reduction achieved through intelligent routing logic versus standard provider fees.',
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              color: textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 24),
-                    Row(
-                      children: [
-                        Container(
-                          width: 12,
-                          height: 12,
-                          decoration: BoxDecoration(
-                            color: PayRouteColors.vibrantOrange,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: PayRouteColors.vibrantOrange.withValues(alpha: 0.5),
-                                blurRadius: 8,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'LIVE CALCULATION',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: PayRouteColors.vibrantOrange,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                Expanded(child: _buildSavingsChart(context)),
-              ],
-            ),
-          ),
-        ),
+        isWide ? Expanded(child: content) : content,
       ],
     );
   }
@@ -141,78 +144,82 @@ class _ROIAnalyticsPageState extends State<ROIAnalyticsPage> {
 
     return Container(
       height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
         color: bgColor,
         border: Border(bottom: BorderSide(color: borderColor)),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Text('Analytics', style: GoogleFonts.inter(fontSize: 14, color: textSecondary)),
-              const SizedBox(width: 8),
-              Icon(Icons.chevron_right, size: 14, color: textSecondary),
-              const SizedBox(width: 8),
-              Text('ROI Impact Engine', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: textPrimary)),
-            ],
-          ),
-          Row(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: brightness == Brightness.dark ? const Color(0xFF151B23) : Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: borderColor),
-                ),
-                padding: const EdgeInsets.all(4),
-                child: Row(
-                  children: _periods.map((period) {
-                    final isSelected = period == _selectedPeriod;
-                    return GestureDetector(
-                      onTap: () => setState(() => _selectedPeriod = period),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: isSelected 
-                              ? (brightness == Brightness.dark ? const Color(0xFF2A3441) : Colors.white) 
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(6),
-                          boxShadow: isSelected 
-                              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4)] 
-                              : null,
-                        ),
-                        child: Text(
-                          period,
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: isSelected ? textPrimary : textSecondary,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Text('Analytics', style: GoogleFonts.inter(fontSize: 14, color: textSecondary)),
+                const SizedBox(width: 8),
+                Icon(Icons.chevron_right, size: 14, color: textSecondary),
+                const SizedBox(width: 8),
+                Text('ROI Impact Engine', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: textPrimary)),
+              ],
+            ),
+            const SizedBox(width: 32),
+            Row(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: brightness == Brightness.dark ? const Color(0xFF151B23) : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: borderColor),
+                  ),
+                  padding: const EdgeInsets.all(4),
+                  child: Row(
+                    children: _periods.map((period) {
+                      final isSelected = period == _selectedPeriod;
+                      return GestureDetector(
+                        onTap: () => setState(() => _selectedPeriod = period),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: isSelected 
+                                ? (brightness == Brightness.dark ? const Color(0xFF2A3441) : Colors.white) 
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(6),
+                            boxShadow: isSelected 
+                                ? [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4)] 
+                                : null,
+                          ),
+                          child: Text(
+                            period,
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: isSelected ? textPrimary : textSecondary,
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Container(width: 1, height: 24, color: borderColor),
-              const SizedBox(width: 16),
-              Row(
-                children: [
-                  Icon(Icons.calendar_today, size: 18, color: textSecondary),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Oct 2023 - Mar 2024',
-                    style: GoogleFonts.inter(fontSize: 14, color: textSecondary),
+                      );
+                    }).toList(),
                   ),
-                ],
-              ),
-            ],
-          ),
-        ],
+                ),
+                const SizedBox(width: 16),
+                Container(width: 1, height: 24, color: borderColor),
+                const SizedBox(width: 16),
+                Row(
+                  children: [
+                    Icon(Icons.calendar_today, size: 18, color: textSecondary),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Oct 2023 - Mar 2024',
+                      style: GoogleFonts.inter(fontSize: 14, color: textSecondary),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

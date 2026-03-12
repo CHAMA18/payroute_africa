@@ -83,11 +83,11 @@ class FinRouteSidebar extends StatelessWidget {
                         onTap: () => context.go(AppRoutes.crossBorder),
                       ),
                       FinRouteNavItem(
-                        label: 'Smart Send',
-                        icon: Icons.bolt_rounded,
-                        selected: selectedLabel == 'Smart Send',
+                        label: 'Saving Goals',
+                        icon: Icons.savings_rounded,
+                        selected: selectedLabel == 'Saving Goals',
                         isCollapsed: isCollapsed,
-                        onTap: () => context.go(AppRoutes.smartSend),
+                        onTap: () => context.go(AppRoutes.savingGoals),
                       ),
                       FinRouteNavItem(
                         label: 'ROI Analytics',

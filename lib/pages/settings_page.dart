@@ -2,6 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:payroute_desktop/providers/auth_provider.dart';
 import 'package:payroute_desktop/theme.dart';
 import 'package:payroute_desktop/widgets/finroute_responsive_scaffold.dart';
 
@@ -18,13 +20,26 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  final TextEditingController _nameController = TextEditingController(text: 'Tunde Adebayo');
-  final TextEditingController _emailController = TextEditingController(text: 'tunde.a@finroute.io');
+  late final TextEditingController _nameController;
+  late final TextEditingController _emailController;
 
   bool _twoFactorEnabled = true;
   bool _biometricEnabled = false;
   bool _dynamicRoutingEnabled = true;
   String _region = 'Lagos, Nigeria';
+  String _role = 'Administrator';
+  String _avatarUrl = '';
+
+  @override
+  void initState() {
+    super.initState();
+    final authProvider = context.read<AuthProvider>();
+    final user = authProvider.userModel;
+    _nameController = TextEditingController(text: user?.displayName ?? 'User');
+    _emailController = TextEditingController(text: user?.email ?? '');
+    _role = user?.displayRole ?? 'Administrator';
+    _avatarUrl = user?.photoUrl ?? 'https://lh3.googleusercontent.com/aida-public/AB6AXuDIaCwDhxVyzTNPQbH6aaAvTB4kSusDv5bbYxEyGKb-1TPNRJk91FgmYmUXT0i8vx_rEyeiQxswISwl2k6YhPpF6d7qSqQ0mrrCPu_XpvzN_trba7SfY6EpmkKfdalH8K0Mm6lt6rVQdGweDb1PDRrudp21TTAMVmdeBLRsYyk0GZI8DhfWA-L90GYjvQbC3HfDiejXV3gCK4z_SmqjrS3TWliIRISkjuUcRqa_TlHL6rFb-MaL5LgFCZVt6Rl_zueXYSIRlwEvITx8';
+  }
 
   void _saveChanges() {}
 
@@ -43,6 +58,7 @@ class _SettingsPageState extends State<SettingsPage> {
       background: const _SettingsGlowBackground(),
       desktopHeader: _SettingsHeader(
         brightness: brightness,
+        avatarUrl: _avatarUrl,
         onSave: _saveChanges,
       ),
       mobileTitle: 'Account Settings',
@@ -70,6 +86,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       nameController: _nameController,
                       emailController: _emailController,
                       region: _region,
+                      role: _role,
                       onRegionChanged: (value) => setState(() => _region = value),
                     ),
                     const SizedBox(height: 24),
@@ -163,10 +180,12 @@ class _GlowCircle extends StatelessWidget {
 
 class _SettingsHeader extends StatelessWidget {
   final Brightness brightness;
+  final String avatarUrl;
   final VoidCallback onSave;
 
   const _SettingsHeader({
     required this.brightness,
+    required this.avatarUrl,
     required this.onSave,
   });
 
@@ -219,7 +238,7 @@ class _SettingsHeader extends StatelessWidget {
                 const SizedBox(width: 16),
                 Container(width: 1, height: 24, color: border),
                 const SizedBox(width: 16),
-                const _ProfileAvatar(),
+                _ProfileAvatar(avatarUrl: avatarUrl),
               ],
             ],
           ),
@@ -230,7 +249,9 @@ class _SettingsHeader extends StatelessWidget {
 }
 
 class _ProfileAvatar extends StatelessWidget {
-  const _ProfileAvatar();
+  final String avatarUrl;
+
+  const _ProfileAvatar({required this.avatarUrl});
 
   @override
   Widget build(BuildContext context) {
@@ -245,10 +266,8 @@ class _ProfileAvatar extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(color: border),
-            image: const DecorationImage(
-              image: NetworkImage(
-                'https://lh3.googleusercontent.com/aida-public/AB6AXuDIaCwDhxVyzTNPQbH6aaAvTB4kSusDv5bbYxEyGKb-1TPNRJk91FgmYmUXT0i8vx_rEyeiQxswISwl2k6YhPpF6d7qSqQ0mrrCPu_XpvzN_trba7SfY6EpmkKfdalH8K0Mm6lt6rVQdGweDb1PDRrudp21TTAMVmdeBLRsYyk0GZI8DhfWA-L90GYjvQbC3HfDiejXV3gCK4z_SmqjrS3TWliIRISkjuUcRqa_TlHL6rFb-MaL5LgFCZVt6Rl_zueXYSIRlwEvITx8',
-              ),
+            image: DecorationImage(
+              image: NetworkImage(avatarUrl),
               fit: BoxFit.cover,
             ),
           ),
@@ -411,12 +430,14 @@ class _AccountProfileSection extends StatelessWidget {
   final TextEditingController nameController;
   final TextEditingController emailController;
   final String region;
+  final String role;
   final ValueChanged<String> onRegionChanged;
 
   const _AccountProfileSection({
     required this.nameController,
     required this.emailController,
     required this.region,
+    required this.role,
     required this.onRegionChanged,
   });
 
@@ -463,7 +484,7 @@ class _AccountProfileSection extends StatelessWidget {
                   onChanged: onRegionChanged,
                 ),
                 const SizedBox(height: 16),
-                const _SettingsReadOnlyField(label: 'Role', value: 'Administrator'),
+                _SettingsReadOnlyField(label: 'Role', value: role),
               ] else ...[
                 Row(
                   children: [
@@ -496,7 +517,7 @@ class _AccountProfileSection extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 16),
-                    const Expanded(child: _SettingsReadOnlyField(label: 'Role', value: 'Administrator')),
+                    Expanded(child: _SettingsReadOnlyField(label: 'Role', value: role)),
                   ],
                 ),
               ],
