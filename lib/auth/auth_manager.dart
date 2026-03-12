@@ -5,6 +5,8 @@ abstract class AuthManager {
   Stream<User?> get authStateChanges;
   Future<UserCredential> signInWithEmailAndPassword(String email, String password);
   Future<UserCredential> createUserWithEmailAndPassword(String email, String password);
+  Future<UserCredential> signInWithGoogle();
+  Future<UserCredential> signInWithGithub();
   Future<void> signOut();
   Future<void> sendPasswordResetEmail(String email);
 }

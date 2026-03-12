@@ -187,6 +187,79 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> signInWithGoogle() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final credential = await _authManager.signInWithGoogle();
+      if (credential.user != null) {
+        await _handleSocialUserRegistration(credential.user!);
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'Google sign-in failed. Please try again.';
+      debugPrint('AuthProvider.signInWithGoogle error: $e');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> signInWithGithub() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final credential = await _authManager.signInWithGithub();
+      if (credential.user != null) {
+        await _handleSocialUserRegistration(credential.user!);
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'GitHub sign-in failed. Please try again.';
+      debugPrint('AuthProvider.signInWithGithub error: $e');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<void> _handleSocialUserRegistration(User user) async {
+    try {
+      _userModel = await _userService.getUserById(user.uid);
+    } catch (e) {
+      // User does not exist, create new user document
+      final now = DateTime.now();
+      final newUserModel = UserModel(
+        id: user.uid,
+        email: user.email ?? '',
+        accountType: 'personal',
+        createdAt: now,
+        updatedAt: now,
+      );
+      try {
+        await _userService.createUser(newUserModel);
+        _userModel = newUserModel;
+      } catch (e2) {
+        debugPrint('AuthProvider._handleSocialUserRegistration error saving to Firestore: $e2');
+        _userModel = newUserModel;
+      }
+    }
+  }
+
   Future<void> signOut() async {
     try {
       // Clear remember me preference when signing out

@@ -291,8 +291,9 @@ class _HeroSection extends StatelessWidget {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: PayRouteColors.vibrantOrange.withValues(
-                                      alpha: 0.6 + pulseController.value * 0.4,
+                                    color: Color.fromRGBO(
+                                      249, 115, 22, 
+                                      0.6 + pulseController.value * 0.4,
                                     ),
                                     blurRadius: 10 + pulseController.value * 6,
                                   ),
@@ -393,8 +394,9 @@ class _HeroSection extends StatelessWidget {
                               borderRadius: BorderRadius.circular(14),
                               boxShadow: [
                                 BoxShadow(
-                                  color: PayRouteColors.vibrantOrange.withValues(
-                                    alpha: 0.3 + pulseController.value * 0.15,
+                                  color: Color.fromRGBO(
+                                    249, 115, 22, 
+                                    0.3 + pulseController.value * 0.15,
                                   ),
                                   blurRadius: 40 + pulseController.value * 10,
                                   offset: const Offset(0, 4),
@@ -534,8 +536,11 @@ class _AnimatedCityDot extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: color.withValues(
-                        alpha: 0.8 + pulseController.value * 0.2,
+                      color: Color.fromARGB(
+                        (255 * (0.8 + pulseController.value * 0.2)).toInt(),
+                        (color.r * 255).toInt(),
+                        (color.g * 255).toInt(),
+                        (color.b * 255).toInt(),
                       ),
                       blurRadius: 18 + pulseController.value * 12,
                       spreadRadius: 3 + pulseController.value * 4,
@@ -593,8 +598,8 @@ class _ReliabilitySection extends StatelessWidget {
           Positioned.fill(
             child: Opacity(
               opacity: 0.4,
-              child: Image.network(
-                'https://lh3.googleusercontent.com/aida-public/AB6AXuB7_47hp0zsJ_GV1RM096y7ePKUxl3AOCKZDmkYczoQy878P4D_by-ee_-COEW2dzzX3G8F0hg8LFqf7NVRNGyE3t8XHzSZ3mpgxOmY-lsCbeqUr3bqPKietLsKt9tn09jtZKhWQKNbiIrZ07Fzdt6T6xa2s5-uHd_E4AJRB3gju0bgnpSLMfJzBgRgPzsHiF-RtL0rGS-isZItSuXYvfifPh83KCjhfqqg0s-UhX4f1Z82kxr4iNaPR75-6tNOJLHkerjVnEl1vkD_',
+              child: Image.asset(
+                'assets/images/abstract_data_flow_blue_1773256565430.jpg',
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => const SizedBox(),
               ),

@@ -72,7 +72,7 @@ class _SmartSendPageState extends State<SmartSendPage> with TickerProviderStateM
           return SingleChildScrollView(
             child: Column(
               children: [
-                SizedBox(height: 400, child: _buildMainContent(context, brightness)),
+                SizedBox(height: 600, child: _buildMainContent(context, brightness)),
                 _buildRightPanelMobile(context, brightness),
               ],
             ),
@@ -108,7 +108,7 @@ class _SmartSendPageState extends State<SmartSendPage> with TickerProviderStateM
               children: [
                 Icon(Icons.lock, size: 12, color: DashboardPalette.textSecondary(brightness)),
                 const SizedBox(width: 4),
-                Text('256-bit Encrypted Transaction', style: GoogleFonts.inter(fontSize: 12, color: DashboardPalette.textSecondary(brightness))),
+                Flexible(child: Text('256-bit Encrypted Transaction', style: GoogleFonts.inter(fontSize: 12, color: DashboardPalette.textSecondary(brightness)), overflow: TextOverflow.ellipsis)),
               ],
             ),
           ),
@@ -132,16 +132,20 @@ class _SmartSendPageState extends State<SmartSendPage> with TickerProviderStateM
     final textMuted = brightness == Brightness.dark ? Colors.grey.shade400 : Colors.grey.shade600;
     
     return Container(
-      height: 64,
+      width: double.infinity,
       decoration: BoxDecoration(
         color: bgColor,
         border: Border(bottom: BorderSide(color: borderColor)),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        runSpacing: 12,
         children: [
           // Breadcrumbs
-          Row(
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text('Transactions', style: GoogleFonts.inter(fontSize: 14, color: textMuted)),
               Icon(Icons.chevron_right, size: 16, color: textMuted),
@@ -150,36 +154,41 @@ class _SmartSendPageState extends State<SmartSendPage> with TickerProviderStateM
               Text('Routing Optimization', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: DashboardPalette.textPrimary(brightness))),
             ],
           ),
-          const Spacer(),
           // Status
-          Text('Last updated: Just now', style: GoogleFonts.inter(fontSize: 12, color: textMuted)),
-          const SizedBox(width: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: brightness == Brightness.dark ? const Color(0xFF151B23) : Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: borderColor),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AnimatedBuilder(
-                  animation: _pulseAnimation,
-                  builder: (context, child) => Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: Colors.yellow.shade600,
-                      shape: BoxShape.circle,
-                      boxShadow: [BoxShadow(color: Colors.yellow.withValues(alpha: _pulseAnimation.value * 0.5), blurRadius: 6)],
-                    ),
-                  ),
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 16,
+            runSpacing: 12,
+            children: [
+              Text('Last updated: Just now', style: GoogleFonts.inter(fontSize: 12, color: textMuted)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: brightness == Brightness.dark ? const Color(0xFF151B23) : Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: borderColor),
                 ),
-                const SizedBox(width: 8),
-                Text('ANALYSIS ACTIVE', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 1, color: DashboardPalette.textSecondary(brightness))),
-              ],
-            ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AnimatedBuilder(
+                      animation: _pulseAnimation,
+                      builder: (context, child) => Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: Colors.yellow.shade600,
+                          shape: BoxShape.circle,
+                          boxShadow: [BoxShadow(color: Color.fromARGB((255 * (_pulseAnimation.value * 0.5)).toInt(), 255, 235, 59), blurRadius: 6)],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text('ANALYSIS ACTIVE', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 1, color: DashboardPalette.textSecondary(brightness))),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -207,48 +216,59 @@ class _SmartSendPageState extends State<SmartSendPage> with TickerProviderStateM
           ),
           // Route visualization
           Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 900, maxHeight: 550),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  return Stack(
-                    children: [
-                      // Animated path lines
-                      CustomPaint(
-                        painter: _RoutePathPainter(
-                          animation: _pathController,
-                          brightness: brightness,
-                        ),
-                        size: Size(constraints.maxWidth, constraints.maxHeight),
-                      ),
-                      // Source wallet - left
-                      Positioned(
-                        left: 0,
-                        top: constraints.maxHeight * 0.5 - 60,
-                        child: _buildSourceWallet(brightness),
-                      ),
-                      // Swift Network card - top center
-                      Positioned(
-                        left: constraints.maxWidth * 0.5 - 130,
-                        top: constraints.maxHeight * 0.1,
-                        child: _buildSwiftNetworkCard(brightness),
-                      ),
-                      // Smart Rail card - bottom center (recommended)
-                      Positioned(
-                        left: constraints.maxWidth * 0.5 - 150,
-                        bottom: constraints.maxHeight * 0.05,
-                        child: _buildSmartRailCard(brightness),
-                      ),
-                      // Destination account - right
-                      Positioned(
-                        right: 0,
-                        top: constraints.maxHeight * 0.5 - 60,
-                        child: _buildDestinationAccount(brightness),
-                      ),
-                    ],
-                  );
-                },
-              ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final double width = math.max(constraints.maxWidth, 600);
+                final double finalWidth = width > 900 ? 900 : width;
+                
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SizedBox(
+                    width: finalWidth,
+                    height: constraints.maxHeight > 550 ? 550 : constraints.maxHeight,
+                    child: LayoutBuilder(
+                      builder: (context, innerConstraints) {
+                        return Stack(
+                          children: [
+                            // Animated path lines
+                            CustomPaint(
+                              painter: _RoutePathPainter(
+                                animation: _pathController,
+                                brightness: brightness,
+                              ),
+                              size: Size(innerConstraints.maxWidth, innerConstraints.maxHeight),
+                            ),
+                            // Source wallet - left
+                            Positioned(
+                              left: 0,
+                              top: innerConstraints.maxHeight * 0.5 - 60,
+                              child: _buildSourceWallet(brightness),
+                            ),
+                            // Swift Network card - top center
+                            Positioned(
+                              left: innerConstraints.maxWidth * 0.5 - 130,
+                              top: innerConstraints.maxHeight * 0.1,
+                              child: _buildSwiftNetworkCard(brightness),
+                            ),
+                            // Smart Rail card - bottom center (recommended)
+                            Positioned(
+                              left: innerConstraints.maxWidth * 0.5 - 150,
+                              bottom: innerConstraints.maxHeight * 0.05,
+                              child: _buildSmartRailCard(brightness),
+                            ),
+                            // Destination account - right
+                            Positioned(
+                              right: 0,
+                              top: innerConstraints.maxHeight * 0.5 - 60,
+                              child: _buildDestinationAccount(brightness),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -358,7 +378,7 @@ class _SmartSendPageState extends State<SmartSendPage> with TickerProviderStateM
             decoration: BoxDecoration(
               color: PayRouteColors.dashboardPrimary,
               borderRadius: BorderRadius.circular(20),
-              boxShadow: [BoxShadow(color: PayRouteColors.dashboardPrimary.withValues(alpha: _pulseAnimation.value * 0.6), blurRadius: 15)],
+              boxShadow: [BoxShadow(color: Color.fromARGB((255 * (_pulseAnimation.value * 0.6)).toInt(), 249, 115, 22), blurRadius: 15)],
             ),
             child: Text('RECOMMENDED PATH', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 1)),
           ),
@@ -567,7 +587,7 @@ class _SmartSendPageState extends State<SmartSendPage> with TickerProviderStateM
                   children: [
                     Icon(Icons.lock, size: 12, color: DashboardPalette.textSecondary(brightness).withValues(alpha: 0.7)),
                     const SizedBox(width: 4),
-                    Text('256-bit Encrypted Transaction', style: GoogleFonts.inter(fontSize: 12, color: DashboardPalette.textSecondary(brightness).withValues(alpha: 0.7))),
+                    Flexible(child: Text('256-bit Encrypted Transaction', style: GoogleFonts.inter(fontSize: 12, color: DashboardPalette.textSecondary(brightness).withValues(alpha: 0.7)), overflow: TextOverflow.ellipsis)),
                   ],
                 ),
               ],
@@ -626,7 +646,7 @@ class _SmartSendPageState extends State<SmartSendPage> with TickerProviderStateM
               children: [
                 Icon(icon, size: 16, color: DashboardPalette.textSecondary(brightness).withValues(alpha: 0.7)),
                 const SizedBox(width: 8),
-                Text(label, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: DashboardPalette.textSecondary(brightness))),
+                Flexible(child: Text(label, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: DashboardPalette.textSecondary(brightness)), overflow: TextOverflow.ellipsis)),
               ],
             ),
           ),
@@ -737,7 +757,7 @@ class _SmartSendPageState extends State<SmartSendPage> with TickerProviderStateM
             decoration: BoxDecoration(
               color: PayRouteColors.dashboardPrimary,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: [BoxShadow(color: PayRouteColors.dashboardPrimary.withValues(alpha: _pulseAnimation.value * 0.4), blurRadius: 20)],
+              boxShadow: [BoxShadow(color: Color.fromARGB((255 * (_pulseAnimation.value * 0.4)).toInt(), 249, 115, 22), blurRadius: 20)],
             ),
             child: Stack(
               children: [
@@ -767,7 +787,7 @@ class _SmartSendPageState extends State<SmartSendPage> with TickerProviderStateM
                     children: [
                       const Icon(Icons.alt_route, color: Colors.white, size: 24),
                       const SizedBox(width: 12),
-                      Text('Switch & Confirm Route', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+                      Flexible(child: Text('Switch & Confirm Route', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white), overflow: TextOverflow.ellipsis)),
                     ],
                   ),
                 ),
@@ -1035,7 +1055,7 @@ class _SmartSendSimulationDialogState extends State<SmartSendSimulationDialog> w
               decoration: BoxDecoration(
                 color: PayRouteColors.dashboardPrimary.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: [BoxShadow(color: PayRouteColors.dashboardPrimary.withValues(alpha: _pulseController.value * 0.3), blurRadius: 12)],
+                boxShadow: [BoxShadow(color: Color.fromARGB((255 * (_pulseController.value * 0.3)).toInt(), 249, 115, 22), blurRadius: 12)],
               ),
               child: const Icon(Icons.bolt, color: PayRouteColors.dashboardPrimary, size: 28),
             ),
@@ -1087,7 +1107,7 @@ class _SmartSendSimulationDialogState extends State<SmartSendSimulationDialog> w
               children: [
                 Row(
                   children: [
-                    Text(_contact['name'], style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: DashboardPalette.textPrimary(brightness))),
+                    Flexible(child: Text(_contact['name'], style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: DashboardPalette.textPrimary(brightness)), overflow: TextOverflow.ellipsis)),
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -1100,9 +1120,9 @@ class _SmartSendSimulationDialogState extends State<SmartSendSimulationDialog> w
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(_contact['email'], style: GoogleFonts.inter(fontSize: 13, color: DashboardPalette.textSecondary(brightness))),
+                Text(_contact['email'], style: GoogleFonts.inter(fontSize: 13, color: DashboardPalette.textSecondary(brightness)), overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 2),
-                Text('${_contact['bank']} • ${_contact['accountNumber']}', style: GoogleFonts.inter(fontSize: 13, color: DashboardPalette.textSecondary(brightness))),
+                Text('${_contact['bank']} • ${_contact['accountNumber']}', style: GoogleFonts.inter(fontSize: 13, color: DashboardPalette.textSecondary(brightness)), overflow: TextOverflow.ellipsis),
               ],
             ),
           ),
@@ -1211,7 +1231,7 @@ class _SmartSendSimulationDialogState extends State<SmartSendSimulationDialog> w
             children: [
               Text(label, style: GoogleFonts.inter(fontSize: 12, color: DashboardPalette.textSecondary(brightness))),
               const SizedBox(height: 2),
-              Text(amount, style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w700, color: isReceive ? Colors.green : DashboardPalette.textPrimary(brightness))),
+              Text(amount, style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w700, color: isReceive ? Colors.green : DashboardPalette.textPrimary(brightness)), overflow: TextOverflow.ellipsis),
             ],
           ),
         ),
@@ -1243,8 +1263,8 @@ class _SmartSendSimulationDialogState extends State<SmartSendSimulationDialog> w
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Smart Rail Route Selected', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: PayRouteColors.dashboardPrimary)),
-                Text('Fastest path • Est. $_estimatedTime', style: GoogleFonts.inter(fontSize: 12, color: DashboardPalette.textSecondary(brightness))),
+                Text('Smart Rail Route Selected', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: PayRouteColors.dashboardPrimary), overflow: TextOverflow.ellipsis),
+                Text('Fastest path • Est. $_estimatedTime', style: GoogleFonts.inter(fontSize: 12, color: DashboardPalette.textSecondary(brightness)), overflow: TextOverflow.ellipsis),
               ],
             ),
           ),
@@ -1287,7 +1307,7 @@ class _SmartSendSimulationDialogState extends State<SmartSendSimulationDialog> w
               children: [
                 const Icon(Icons.send_rounded, size: 20),
                 const SizedBox(width: 10),
-                Text('Send Now', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600)),
+                Flexible(child: Text('Send Now', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
               ],
             ),
           ),
@@ -1344,7 +1364,7 @@ class _SmartSendSimulationDialogState extends State<SmartSendSimulationDialog> w
             decoration: BoxDecoration(
               color: PayRouteColors.dashboardPrimary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
-              boxShadow: [BoxShadow(color: PayRouteColors.dashboardPrimary.withValues(alpha: _pulseController.value * 0.4), blurRadius: 30)],
+              boxShadow: [BoxShadow(color: Color.fromARGB((255 * (_pulseController.value * 0.4)).toInt(), 249, 115, 22), blurRadius: 30)],
             ),
             child: const Icon(Icons.bolt, color: PayRouteColors.dashboardPrimary, size: 40),
           ),

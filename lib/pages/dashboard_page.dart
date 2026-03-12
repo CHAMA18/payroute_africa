@@ -621,13 +621,13 @@ class _WeeklyBarChartState extends State<_WeeklyBarChart>
   Widget build(BuildContext context) {
     final textSecondary = DashboardPalette.textSecondary(widget.brightness);
     final bars = <_BarData>[
-      const _BarData(label: 'Mon', percent: 0.15, value: '₦0'),
-      const _BarData(label: 'Tue', percent: 0.25, value: '₦0'),
-      const _BarData(label: 'Wed', percent: 0.1, value: '₦0'),
-      const _BarData(label: 'Thu', percent: 0.35, value: '₦0'),
-      const _BarData(label: 'Fri', percent: 0.2, value: '₦0'),
-      const _BarData(label: 'Sat', percent: 0.08, value: '₦0'),
-      const _BarData(label: 'Sun', percent: 0.05, value: '₦0'),
+      const _BarData(label: 'Mon', percent: 0.0, value: '₦0'),
+      const _BarData(label: 'Tue', percent: 0.0, value: '₦0'),
+      const _BarData(label: 'Wed', percent: 0.0, value: '₦0'),
+      const _BarData(label: 'Thu', percent: 0.0, value: '₦0'),
+      const _BarData(label: 'Fri', percent: 0.0, value: '₦0'),
+      const _BarData(label: 'Sat', percent: 0.0, value: '₦0'),
+      const _BarData(label: 'Sun', percent: 0.0, value: '₦0'),
     ];
 
     return SizedBox(

@@ -61,6 +61,15 @@ class _ExchangePageState extends State<ExchangePage> {
   }
 }
 
+class _ExchangePalette {
+  static const Color primary = PayRouteColors.dashboardPrimary;
+  static const Color primaryDeep = PayRouteColors.dashboardAccentOrange;
+  static const Color primarySoft = Color(0xFFFFF3E9);
+  static const Color neutralTile = Color(0xFFF6F7FB);
+  static const Color slate = Color(0xFF334155);
+  static const Color alertRed = Color(0xFFE11D48);
+}
+
 class _ExchangeGlowBackground extends StatelessWidget {
   const _ExchangeGlowBackground();
 
@@ -366,7 +375,7 @@ class _SwapPanelState extends State<_SwapPanel> {
                 label: 'You Send',
                 trailing: 'Balance:  \$${_balance.toStringAsFixed(2)}',
                 controller: widget.sendController,
-                accentColor: _exceedsBalance ? Colors.red : DashboardPalette.textPrimary(b),
+                accentColor: _exceedsBalance ? _ExchangePalette.alertRed : DashboardPalette.textPrimary(b),
                 currencyLabel: 'USD',
                 flag: '🇺🇸',
                 readOnly: false,
@@ -377,11 +386,11 @@ class _SwapPanelState extends State<_SwapPanel> {
                   padding: const EdgeInsets.only(top: 8, left: 6),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline, color: Colors.red, size: 16),
+                      const Icon(Icons.error_outline, color: _ExchangePalette.alertRed, size: 16),
                       const SizedBox(width: 6),
                       Text(
                         'Insufficient balance. Please enter an amount within your available balance.',
-                        style: GoogleFonts.inter(color: Colors.red, fontSize: 12, fontWeight: FontWeight.w500),
+                        style: GoogleFonts.inter(color: _ExchangePalette.alertRed, fontSize: 12, fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
@@ -408,7 +417,7 @@ class _SwapPanelState extends State<_SwapPanel> {
                   ),
                 ),
                 controller: widget.receiveController,
-                accentColor: PayRouteColors.electricBlue,
+                accentColor: _ExchangePalette.primary,
                 currencyLabel: 'NGN',
                 flag: '🇳🇬',
                 readOnly: true,
@@ -643,13 +652,13 @@ class _AmountCard extends StatelessWidget {
     final textSecondary = DashboardPalette.textSecondary(b);
     final screenWidth = MediaQuery.sizeOf(context).width;
     final amountFontSize = screenWidth < 360 ? 26.0 : screenWidth < 420 ? 30.0 : 34.0;
-    final borderColor = hasError ? Colors.red : border;
+    final borderColor = hasError ? _ExchangePalette.alertRed : border;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 240),
       curve: Curves.easeOutCubic,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: hasError ? Colors.red.withValues(alpha: 0.05) : surface.withValues(alpha: b == Brightness.dark ? 0.52 : 1),
+        color: hasError ? _ExchangePalette.alertRed.withValues(alpha: 0.05) : surface.withValues(alpha: b == Brightness.dark ? 0.52 : 1),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: borderColor, width: hasError ? 1.5 : 1),
       ),
@@ -1010,9 +1019,9 @@ class _RoutingRailState extends State<_RoutingRail> with SingleTickerProviderSta
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: const [
-                _RailDot(label: 'USD', color: PayRouteColors.dashboardPrimary),
+                _RailDot(label: 'USD', color: _ExchangePalette.primary),
                 _RailCenterSpinner(),
-                _RailDot(label: 'NGN', color: PayRouteColors.dashboardAccentOrange),
+                _RailDot(label: 'NGN', color: _ExchangePalette.primaryDeep),
               ],
             ),
           ),
@@ -1135,6 +1144,7 @@ class _RouteOptionData {
   final Color badgeColor;
   final String monogram;
   final Color monogramBg;
+  final Color monogramColor;
   final String rate;
   final String fee;
   final Color feeColor;
@@ -1149,6 +1159,7 @@ class _RouteOptionData {
     required this.badgeColor,
     required this.monogram,
     required this.monogramBg,
+    required this.monogramColor,
     required this.rate,
     required this.fee,
     required this.feeColor,
@@ -1162,9 +1173,10 @@ class _RouteOptionData {
           subtitle: 'Direct Bank Transfer',
           recommended: true,
           badgeLabel: 'RECOMMENDED',
-          badgeColor: PayRouteColors.dashboardPrimary,
+          badgeColor: _ExchangePalette.primary,
           monogram: 'W',
-          monogramBg: Colors.white,
+          monogramBg: _ExchangePalette.primarySoft,
+          monogramColor: _ExchangePalette.primary,
           rate: '1,150.00',
           fee: '\$2.50',
           feeColor: PayRouteColors.dashboardGreen,
@@ -1180,7 +1192,8 @@ class _RouteOptionData {
           badgeLabel: '',
           badgeColor: Colors.transparent,
           monogram: 'P',
-          monogramBg: Colors.indigo,
+          monogramBg: _ExchangePalette.neutralTile,
+          monogramColor: _ExchangePalette.slate,
           rate: '1,148.50',
           fee: '\$4.00',
           feeColor: const Color(0xFFCBD5E1),
@@ -1196,7 +1209,8 @@ class _RouteOptionData {
           badgeLabel: '',
           badgeColor: Colors.transparent,
           monogram: 'F',
-          monogramBg: Colors.deepOrange,
+          monogramBg: _ExchangePalette.neutralTile,
+          monogramColor: _ExchangePalette.slate,
           rate: '1,145.00',
           fee: '\$3.50',
           feeColor: const Color(0xFFCBD5E1),
@@ -1228,9 +1242,9 @@ class _RouteOptionState extends State<_RouteOption> {
     final textSecondary = DashboardPalette.textSecondary(b);
     final data = widget.data;
     final selected = widget.selected;
-    final borderColor = selected ? PayRouteColors.dashboardPrimary : baseBorder;
-    final bg = selected ? PayRouteColors.dashboardPrimary.withValues(alpha: b == Brightness.dark ? 0.08 : 0.10) : surface.withValues(alpha: b == Brightness.dark ? 0.50 : 1);
-    final hoverBg = surface.withValues(alpha: b == Brightness.dark ? 0.55 : 0.98);
+    final borderColor = selected ? _ExchangePalette.primary : baseBorder;
+    final bg = surface.withValues(alpha: b == Brightness.dark ? (selected ? 0.62 : 0.50) : (selected ? 0.98 : 1));
+    final hoverBg = surface.withValues(alpha: b == Brightness.dark ? 0.68 : 0.99);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hover = true),
@@ -1246,7 +1260,7 @@ class _RouteOptionState extends State<_RouteOption> {
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: borderColor.withValues(alpha: selected ? 0.9 : 1)),
             boxShadow: selected
-                ? [BoxShadow(color: PayRouteColors.dashboardPrimary.withValues(alpha: 0.12), blurRadius: 18, spreadRadius: 1)]
+                  ? [BoxShadow(color: _ExchangePalette.primary.withValues(alpha: 0.12), blurRadius: 18, spreadRadius: 1)]
                 : null,
           ),
           child: Column(
@@ -1285,7 +1299,7 @@ class _RouteOptionState extends State<_RouteOption> {
                     child: Text(
                       data.monogram,
                       style: GoogleFonts.inter(
-                        color: data.monogramBg == Colors.white ? Colors.black : Colors.white,
+                        color: data.monogramColor,
                         fontWeight: FontWeight.w900,
                         fontSize: 12,
                       ),

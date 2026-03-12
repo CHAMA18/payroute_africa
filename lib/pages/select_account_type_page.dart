@@ -7,6 +7,7 @@ import 'package:payroute_desktop/nav.dart';
 import 'package:payroute_desktop/theme.dart';
 import 'package:payroute_desktop/models/account_type.dart';
 import 'package:payroute_desktop/utils/animations.dart';
+import 'package:payroute_desktop/widgets/animated_background.dart';
 
 class SelectAccountTypePage extends StatefulWidget {
   const SelectAccountTypePage({super.key});
@@ -44,7 +45,7 @@ class _SelectAccountTypePageState extends State<SelectAccountTypePage> {
       backgroundColor: const Color(0xFF05080F),
       body: Stack(
         children: [
-          const _MeshGradientBackground(),
+          const MeshGradientBackground(),
           SafeArea(
             child: Column(
               children: [
@@ -81,210 +82,6 @@ class _SelectAccountTypePageState extends State<SelectAccountTypePage> {
       ),
     );
   }
-}
-
-class _MeshGradientBackground extends StatefulWidget {
-  const _MeshGradientBackground();
-
-  @override
-  State<_MeshGradientBackground> createState() => _MeshGradientBackgroundState();
-}
-
-class _MeshGradientBackgroundState extends State<_MeshGradientBackground>
-    with TickerProviderStateMixin {
-  late AnimationController _floatController;
-  late AnimationController _pulseController;
-  late AnimationController _particleController;
-
-  @override
-  void initState() {
-    super.initState();
-    _floatController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 15),
-    )..repeat();
-    
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    )..repeat(reverse: true);
-    
-    _particleController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 30),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _floatController.dispose();
-    _pulseController.dispose();
-    _particleController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        // Base gradient
-        Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF05080F),
-            gradient: RadialGradient(
-              center: const Alignment(-1.0, -1.0),
-              radius: 1.5,
-              colors: [
-                PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.12),
-                Colors.transparent,
-              ],
-            ),
-          ),
-        ),
-        // Secondary gradient
-        Container(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: const Alignment(1.0, 1.0),
-              radius: 1.5,
-              colors: [
-                const Color(0xFF2563EB).withValues(alpha: 0.08),
-                Colors.transparent,
-              ],
-            ),
-          ),
-        ),
-        
-        // Animated floating orbs
-        AnimatedBuilder(
-          animation: Listenable.merge([_floatController, _pulseController]),
-          builder: (context, _) {
-            final float = _floatController.value * 2 * pi;
-            final pulse = _pulseController.value;
-            
-            return Stack(
-              children: [
-                // Top-left orange glow - floating
-                Positioned(
-                  top: -size.height * 0.2 + sin(float) * 30,
-                  left: -size.width * 0.1 + cos(float * 0.7) * 20,
-                  child: Container(
-                    width: size.width * 0.6 * (1 + pulse * 0.1),
-                    height: size.height * 0.6 * (1 + pulse * 0.1),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          PayRouteColors.fintechNoirPrimary.withValues(alpha: 0.08 + pulse * 0.04),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                // Bottom-right blue glow - floating
-                Positioned(
-                  bottom: -size.height * 0.2 + cos(float) * 25,
-                  right: -size.width * 0.1 + sin(float * 0.8) * 20,
-                  child: Container(
-                    width: size.width * 0.6,
-                    height: size.height * 0.6,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          const Color(0xFF2563EB).withValues(alpha: 0.04 + pulse * 0.02),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                // Center subtle glow
-                Positioned(
-                  top: size.height * 0.3 + sin(float * 1.2) * 20,
-                  left: size.width * 0.4 + cos(float) * 30,
-                  child: Container(
-                    width: 300,
-                    height: 300,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          const Color(0xFF8B5CF6).withValues(alpha: 0.03 + pulse * 0.02),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-        
-        // Floating particles
-        AnimatedBuilder(
-          animation: _particleController,
-          builder: (context, _) {
-            return CustomPaint(
-              painter: _FloatingParticlesPainter(
-                progress: _particleController.value,
-                color: PayRouteColors.fintechNoirPrimary,
-              ),
-              size: Size.infinite,
-            );
-          },
-        ),
-      ],
-    );
-  }
-}
-
-class _FloatingParticlesPainter extends CustomPainter {
-  final double progress;
-  final Color color;
-  final Random _random = Random(42);
-
-  _FloatingParticlesPainter({required this.progress, required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-    
-    for (int i = 0; i < 30; i++) {
-      final seed = _random.nextDouble();
-      final x = (_random.nextDouble() + sin((progress + seed) * 2 * pi) * 0.05) % 1.0;
-      final y = (_random.nextDouble() + cos((progress + seed) * 2 * pi) * 0.05) % 1.0;
-      
-      final particleProgress = (progress + seed) % 1.0;
-      final alpha = (0.2 + sin(particleProgress * pi) * 0.3);
-      final radius = 1.5 + _random.nextDouble() * 2;
-      
-      // Glow
-      paint.color = color.withValues(alpha: alpha * 0.3);
-      canvas.drawCircle(
-        Offset(x * size.width, y * size.height),
-        radius * 3,
-        paint,
-      );
-      
-      // Core
-      paint.color = Colors.white.withValues(alpha: alpha);
-      canvas.drawCircle(
-        Offset(x * size.width, y * size.height),
-        radius,
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_FloatingParticlesPainter oldDelegate) =>
-      oldDelegate.progress != progress;
 }
 
 class _Header extends StatelessWidget {
@@ -1034,7 +831,7 @@ class _Footer extends StatelessWidget {
           const SizedBox(height: 16),
           // Copyright
           Text(
-            '© 2024 FINTECH NOIR AFRICA. ALL RIGHTS RESERVED.',
+            '© 2024 PAYROUTE AFRICA. ALL RIGHTS RESERVED.',
             style: context.textStyles.labelSmall?.copyWith(
               color: Colors.white.withValues(alpha: 0.20),
               letterSpacing: 2,

@@ -2,6 +2,7 @@ import 'package:payroute_desktop/pages/landing_page.dart';
 import 'package:payroute_desktop/pages/login_page.dart';
 import 'package:payroute_desktop/pages/dashboard_page.dart';
 import 'package:payroute_desktop/pages/activity_page.dart';
+import 'package:payroute_desktop/pages/wallet_page.dart';
 import 'package:payroute_desktop/pages/exchange_page.dart';
 import 'package:payroute_desktop/pages/cards_page.dart';
 import 'package:payroute_desktop/pages/settings_page.dart';
@@ -14,6 +15,7 @@ import 'package:payroute_desktop/pages/review_page.dart';
 import 'package:payroute_desktop/pages/success_page.dart';
 import 'package:payroute_desktop/pages/smart_send_page.dart';
 import 'package:payroute_desktop/pages/roi_analytics_page.dart';
+import 'package:payroute_desktop/pages/cross_border_page.dart';
 import 'package:payroute_desktop/models/account_type.dart';
 import 'package:payroute_desktop/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
@@ -208,10 +210,24 @@ class AppRouter {
         ),
       ),
       GoRoute(
+        path: AppRoutes.wallet,
+        name: 'wallet',
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: WalletPage(),
+        ),
+      ),
+      GoRoute(
         path: AppRoutes.activity,
         name: 'activity',
         pageBuilder: (context, state) => const NoTransitionPage(
           child: ActivityPage(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.crossBorder,
+        name: 'crossBorder',
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: CrossBorderPage(),
         ),
       ),
       GoRoute(
@@ -312,10 +328,12 @@ class AppRoutes {
   static const String review = '/review';
   static const String success = '/success';
   static const String dashboard = '/dashboard';
+  static const String wallet = '/wallet';
   static const String activity = '/activity';
   static const String exchange = '/exchange';
   static const String cards = '/cards';
   static const String settings = '/settings';
   static const String smartSend = '/smart-send';
   static const String roiAnalytics = '/roi-analytics';
+  static const String crossBorder = '/cross-border';
 }

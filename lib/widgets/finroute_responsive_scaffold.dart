@@ -44,16 +44,9 @@ class FinRouteResponsiveScaffold extends StatelessWidget {
               ? null
               : Drawer(
                   backgroundColor: Colors.transparent,
-                  child: SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 12, right: 12, bottom: 12),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: SingleChildScrollView(
-                          child: FinRouteSidebar(selectedLabel: selectedLabel),
-                        ),
-                      ),
-                    ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: FinRouteSidebar(selectedLabel: selectedLabel),
                   ),
                 ),
           bottomNavigationBar: showSidebar
@@ -62,12 +55,12 @@ class FinRouteResponsiveScaffold extends StatelessWidget {
           body: Stack(
             children: [
               if (background != null) background!,
-              SafeArea(
-                child: showSidebar
-                    ? Row(
-                        children: [
-                          FinRouteSidebar(selectedLabel: selectedLabel),
-                          Expanded(
+              showSidebar
+                  ? Row(
+                      children: [
+                        FinRouteSidebar(selectedLabel: selectedLabel),
+                        Expanded(
+                          child: SafeArea(
                             child: Column(
                               children: [
                                 if (desktopHeader != null) desktopHeader!,
@@ -75,9 +68,11 @@ class FinRouteResponsiveScaffold extends StatelessWidget {
                               ],
                             ),
                           ),
-                        ],
-                      )
-                    : Column(
+                        ),
+                      ],
+                    )
+                  : SafeArea(
+                      child: Column(
                         children: [
                           _FinRouteMobileTopBar(
                             title: mobileTitle,
@@ -87,7 +82,7 @@ class FinRouteResponsiveScaffold extends StatelessWidget {
                           Expanded(child: child),
                         ],
                       ),
-              ),
+                    ),
               Positioned(
                 right: 20,
                 bottom: showSidebar ? 20 : 90,
@@ -158,7 +153,7 @@ class _FinRouteMobileBottomNav extends StatelessWidget {
 
   static const List<_NavItem> _navItems = [
     _NavItem(label: 'Home', icon: Icons.home_outlined, selectedIcon: Icons.home, route: AppRoutes.dashboard),
-    _NavItem(label: 'Send', icon: Icons.alt_route_outlined, selectedIcon: Icons.alt_route, route: AppRoutes.smartSend),
+    _NavItem(label: 'Send', icon: Icons.alt_route_outlined, selectedIcon: Icons.alt_route, route: AppRoutes.crossBorder),
     _NavItem(label: 'Analytics', icon: Icons.analytics_outlined, selectedIcon: Icons.analytics, route: AppRoutes.roiAnalytics),
     _NavItem(label: 'Activity', icon: Icons.list_alt_outlined, selectedIcon: Icons.list_alt, route: AppRoutes.activity),
     _NavItem(label: 'More', icon: Icons.more_horiz, selectedIcon: Icons.more_horiz, route: ''),

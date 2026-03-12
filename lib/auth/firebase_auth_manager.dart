@@ -44,6 +44,36 @@ class FirebaseAuthManager implements AuthManager {
   }
 
   @override
+  Future<UserCredential> signInWithGoogle() async {
+    try {
+      final provider = GoogleAuthProvider();
+      if (kIsWeb) {
+        return await _auth.signInWithPopup(provider);
+      } else {
+        return await _auth.signInWithProvider(provider);
+      }
+    } catch (e) {
+      debugPrint('FirebaseAuthManager.signInWithGoogle error: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<UserCredential> signInWithGithub() async {
+    try {
+      final provider = GithubAuthProvider();
+      if (kIsWeb) {
+        return await _auth.signInWithPopup(provider);
+      } else {
+        return await _auth.signInWithProvider(provider);
+      }
+    } catch (e) {
+      debugPrint('FirebaseAuthManager.signInWithGithub error: $e');
+      rethrow;
+    }
+  }
+
+  @override
   Future<void> signOut() async {
     try {
       await _auth.signOut();

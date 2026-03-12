@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:payroute_desktop/theme.dart';
 import 'package:payroute_desktop/widgets/finroute_responsive_scaffold.dart';
 import 'package:payroute_desktop/providers/auth_provider.dart';
+import 'package:payroute_desktop/models/transaction_model.dart';
+import 'package:payroute_desktop/services/transaction_service.dart';
 
 class ActivityPage extends StatelessWidget {
   const ActivityPage({super.key});
@@ -28,7 +30,6 @@ class _GlowBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final b = Theme.of(context).brightness;
-    // In light mode we want a crisp, clear background (no glows/gradients).
     if (b == Brightness.light) return const SizedBox.shrink();
     final bg = DashboardPalette.bg(b);
     final neutralA = Colors.white.withValues(alpha: 0.06);
@@ -36,16 +37,8 @@ class _GlowBackground extends StatelessWidget {
     return IgnorePointer(
       child: Stack(
         children: [
-          Positioned(
-            top: -160,
-            left: -120,
-            child: _GlowCircle(color: neutralA, size: 520),
-          ),
-          Positioned(
-            top: -120,
-            right: -160,
-            child: _GlowCircle(color: neutralB, size: 460),
-          ),
+          Positioned(top: -160, left: -120, child: _GlowCircle(color: neutralA, size: 520)),
+          Positioned(top: -120, right: -160, child: _GlowCircle(color: neutralB, size: 460)),
           Positioned(
             bottom: -40,
             left: -20,
@@ -53,11 +46,7 @@ class _GlowBackground extends StatelessWidget {
             child: Container(
               height: 320,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [bg, Colors.transparent],
-                ),
+                gradient: LinearGradient(begin: Alignment.bottomCenter, end: Alignment.topCenter, colors: [bg, Colors.transparent]),
               ),
             ),
           ),
@@ -81,9 +70,7 @@ class _GlowCircle extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(size),
-        boxShadow: [
-          BoxShadow(color: color, blurRadius: 120, spreadRadius: 40),
-        ],
+        boxShadow: [BoxShadow(color: color, blurRadius: 120, spreadRadius: 40)],
       ),
     );
   }
@@ -132,10 +119,7 @@ class _ActivityHeader extends StatelessWidget {
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(999), borderSide: BorderSide(color: border)),
               enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(999), borderSide: BorderSide(color: border)),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(999),
-                borderSide: BorderSide(color: PayRouteColors.dashboardPrimary.withValues(alpha: 0.5)),
-              ),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(999), borderSide: BorderSide(color: PayRouteColors.dashboardPrimary.withValues(alpha: 0.5))),
             ),
           ),
         );
@@ -152,7 +136,7 @@ class _ActivityHeader extends StatelessWidget {
           ],
         );
 
-        Widget _buildAvatar(String? photoUrl, String initials, Color border, Color bg) {
+        Widget buildAvatar(String? photoUrl, String initials, Color border, Color bg) {
           return Stack(
             children: [
               Container(
@@ -161,35 +145,15 @@ class _ActivityHeader extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(color: border),
-                  image: photoUrl != null
-                      ? DecorationImage(
-                          image: NetworkImage(photoUrl),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
+                  image: photoUrl != null ? DecorationImage(image: NetworkImage(photoUrl), fit: BoxFit.cover) : null,
                   color: photoUrl == null ? PayRouteColors.dashboardPrimary : null,
                 ),
-                child: photoUrl == null
-                    ? Center(
-                        child: Text(
-                          initials,
-                          style: GoogleFonts.inter(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16,
-                          ),
-                        ),
-                      )
-                    : null,
+                child: photoUrl == null ? Center(child: Text(initials, style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16))) : null,
               ),
               Positioned(
                 bottom: 2,
                 right: 2,
-                child: Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(color: PayRouteColors.dashboardGreen, shape: BoxShape.circle, border: Border.all(color: bg, width: 2)),
-                ),
+                child: Container(width: 10, height: 10, decoration: BoxDecoration(color: PayRouteColors.dashboardGreen, shape: BoxShape.circle, border: Border.all(color: bg, width: 2))),
               ),
             ],
           );
@@ -234,7 +198,7 @@ class _ActivityHeader extends StatelessWidget {
                   final firebaseUser = authProvider.firebaseUser;
                   final photoUrl = user?.photoUrl ?? firebaseUser?.photoURL;
                   final initials = user?.initials ?? 'U';
-                  return _buildAvatar(photoUrl, initials, border, bg);
+                  return buildAvatar(photoUrl, initials, border, bg);
                 },
               ),
             ],
@@ -245,10 +209,72 @@ class _ActivityHeader extends StatelessWidget {
   }
 }
 
-class _ActivityBody extends StatelessWidget {
+class _ActivityBody extends StatefulWidget {
   final Brightness brightness;
 
   const _ActivityBody({required this.brightness});
+
+  @override
+  State<_ActivityBody> createState() => _ActivityBodyState();
+}
+
+class _ActivityBodyState extends State<_ActivityBody> {
+  final TransactionService _transactionService = TransactionService();
+  List<TransactionModel> _transactions = [];
+  Map<String, dynamic> _kpis = {};
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final authProvider = context.read<AuthProvider>();
+    final userId = authProvider.firebaseUser?.uid;
+
+    if (userId != null) {
+      final transactions = await _transactionService.getTransactionsByUserId(userId);
+      final kpis = await _transactionService.getTransactionKPIs(userId);
+
+      if (mounted) {
+        setState(() {
+          _transactions = transactions;
+          _kpis = kpis;
+          _isLoading = false;
+        });
+      }
+    } else {
+      // If no user ID, try fetching all transactions (for demo purposes)
+      final transactions = await _transactionService.getAllTransactions();
+      if (mounted) {
+        setState(() {
+          _transactions = transactions;
+          _kpis = {
+            'totalVolume': transactions.fold(0.0, (sum, tx) => sum + tx.amount),
+            'successfulTransfers': transactions.where((tx) => tx.status == TransactionStatus.completed).length,
+            'avgFeeSaved': transactions.where((tx) => tx.feeSaved != null && tx.feeSaved! > 0).fold(0.0, (sum, tx) => sum + (tx.feeSaved ?? 0)) / (transactions.where((tx) => tx.feeSaved != null && tx.feeSaved! > 0).length.clamp(1, 9999)),
+            'totalTransactions': transactions.length,
+          };
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  String _formatVolume(double volume) {
+    if (volume >= 1000000) {
+      return '₦${(volume / 1000000).toStringAsFixed(1)}M';
+    } else if (volume >= 1000) {
+      return '₦${volume.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}';
+    }
+    return '₦${volume.toStringAsFixed(2)}';
+  }
+
+  String _formatNumber(int number) {
+    return number.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -259,11 +285,21 @@ class _ActivityBody extends StatelessWidget {
           padding: EdgeInsets.all(padding),
           child: Column(
             children: [
-              _KpiRow(brightness: brightness),
+              _KpiRow(
+                brightness: widget.brightness,
+                isLoading: _isLoading,
+                totalVolume: _formatVolume((_kpis['totalVolume'] ?? 0).toDouble()),
+                successfulTransfers: _formatNumber((_kpis['successfulTransfers'] ?? 0) as int),
+                avgFeeSaved: '₦${((_kpis['avgFeeSaved'] ?? 0).toDouble()).toStringAsFixed(2)}/tx',
+              ),
               const SizedBox(height: 20),
-              _FiltersRow(brightness: brightness),
+              _FiltersRow(brightness: widget.brightness),
               const SizedBox(height: 16),
-              _ActivityTable(brightness: brightness),
+              _ActivityTable(
+                brightness: widget.brightness,
+                transactions: _transactions,
+                isLoading: _isLoading,
+              ),
             ],
           ),
         );
@@ -274,8 +310,18 @@ class _ActivityBody extends StatelessWidget {
 
 class _KpiRow extends StatelessWidget {
   final Brightness brightness;
+  final bool isLoading;
+  final String totalVolume;
+  final String successfulTransfers;
+  final String avgFeeSaved;
 
-  const _KpiRow({required this.brightness});
+  const _KpiRow({
+    required this.brightness,
+    required this.isLoading,
+    required this.totalVolume,
+    required this.successfulTransfers,
+    required this.avgFeeSaved,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -287,47 +333,39 @@ class _KpiRow extends StatelessWidget {
             icon: Icons.payments,
             iconBg: PayRouteColors.dashboardPrimary,
             label: 'Total Volume',
-            value: '₦45,280,000',
+            value: isLoading ? '...' : totalVolume,
             delta: '12.5%',
             deltaColor: PayRouteColors.dashboardGreen,
             brightness: brightness,
+            isLoading: isLoading,
           ),
           _KpiCard(
             icon: Icons.check_circle,
             iconBg: PayRouteColors.dashboardGreen,
             label: 'Successful Transfers',
-            value: '1,248',
+            value: isLoading ? '...' : successfulTransfers,
             delta: '5.2%',
             deltaColor: PayRouteColors.dashboardGreen,
             brightness: brightness,
+            isLoading: isLoading,
           ),
           _KpiCard(
             icon: Icons.savings,
             iconBg: PayRouteColors.dashboardAccentOrange,
             label: 'Avg Fee Saved',
-            value: '₦125.00/tx',
+            value: isLoading ? '...' : avgFeeSaved,
             delta: '2.4%',
             deltaColor: PayRouteColors.dashboardGreen,
             brightness: brightness,
+            isLoading: isLoading,
           ),
         ];
 
         if (isNarrow) {
-          return Column(
-            children: [
-              for (final child in children) ...[child, const SizedBox(height: 14)],
-            ],
-          );
+          return Column(children: [for (final child in children) ...[child, const SizedBox(height: 14)]]);
         }
 
-        return Row(
-          children: [
-            for (var i = 0; i < children.length; i++) ...[
-              Expanded(child: children[i]),
-              if (i != children.length - 1) const SizedBox(width: 16),
-            ],
-          ],
-        );
+        return Row(children: [for (var i = 0; i < children.length; i++) ...[Expanded(child: children[i]), if (i != children.length - 1) const SizedBox(width: 16)]]);
       },
     );
   }
@@ -340,10 +378,19 @@ class _KpiCard extends StatelessWidget {
   final String value;
   final String delta;
   final Color deltaColor;
-
   final Brightness brightness;
+  final bool isLoading;
 
-  const _KpiCard({required this.icon, required this.iconBg, required this.label, required this.value, required this.delta, required this.deltaColor, required this.brightness});
+  const _KpiCard({
+    required this.icon,
+    required this.iconBg,
+    required this.label,
+    required this.value,
+    required this.delta,
+    required this.deltaColor,
+    required this.brightness,
+    this.isLoading = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -394,7 +441,13 @@ class _KpiCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(label, style: GoogleFonts.inter(color: textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
           const SizedBox(height: 6),
-          Text(value, style: GoogleFonts.inter(color: textPrimary, fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
+          isLoading
+              ? Container(
+                  height: 26,
+                  width: 100,
+                  decoration: BoxDecoration(color: textSecondary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                )
+              : Text(value, style: GoogleFonts.inter(color: textPrimary, fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
         ],
       ),
     );
@@ -437,40 +490,18 @@ class _FiltersRow extends StatelessWidget {
               filled: true,
               fillColor: DashboardPalette.surfaceMuted(brightness),
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: DashboardPalette.border(brightness)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: DashboardPalette.border(brightness)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: PayRouteColors.dashboardPrimary.withValues(alpha: 0.5)),
-              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: DashboardPalette.border(brightness))),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: DashboardPalette.border(brightness))),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: PayRouteColors.dashboardPrimary.withValues(alpha: 0.5))),
             ),
           ),
         );
 
         if (isNarrow) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              left,
-              const SizedBox(height: 12),
-              right,
-            ],
-          );
+          return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [left, const SizedBox(height: 12), right]);
         }
 
-        return Row(
-          children: [
-            left,
-            const Spacer(),
-            right,
-          ],
-        );
+        return Row(children: [left, const Spacer(), right]);
       },
     );
   }
@@ -479,7 +510,6 @@ class _FiltersRow extends StatelessWidget {
 class _FilterChipButton extends StatelessWidget {
   final String label;
   final IconData icon;
-
   final Brightness brightness;
 
   const _FilterChipButton({required this.label, required this.icon, required this.brightness});
@@ -491,11 +521,7 @@ class _FilterChipButton extends StatelessWidget {
     final textSecondary = DashboardPalette.textSecondary(brightness);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: border),
-      ),
+      decoration: BoxDecoration(color: surface, borderRadius: BorderRadius.circular(14), border: Border.all(color: border)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -521,9 +547,7 @@ class _PrimaryChipButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: PayRouteColors.dashboardPrimary,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(color: PayRouteColors.dashboardPrimary.withValues(alpha: 0.25), blurRadius: 18, spreadRadius: 2),
-        ],
+        boxShadow: [BoxShadow(color: PayRouteColors.dashboardPrimary.withValues(alpha: 0.25), blurRadius: 18, spreadRadius: 2)],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -539,10 +563,14 @@ class _PrimaryChipButton extends StatelessWidget {
 
 class _ActivityTable extends StatelessWidget {
   final Brightness brightness;
+  final List<TransactionModel> transactions;
+  final bool isLoading;
 
-  const _ActivityTable({required this.brightness});
-
-  static const _rows = <_ActivityRowData>[];
+  const _ActivityTable({
+    required this.brightness,
+    required this.transactions,
+    this.isLoading = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -559,21 +587,19 @@ class _ActivityTable extends StatelessWidget {
         child: Column(
           children: [
             _TableHeader(brightness: brightness),
-            if (_rows.isEmpty)
+            if (isLoading)
+              _LoadingState(brightness: brightness)
+            else if (transactions.isEmpty)
               _EmptyState(brightness: brightness)
             else
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(minWidth: 980),
-                  child: Column(
-                    children: [
-                      for (final row in _rows) _TableRow(row: row, brightness: brightness),
-                    ],
-                  ),
+                  child: Column(children: [for (final tx in transactions) _TableRow(transaction: tx, brightness: brightness)]),
                 ),
               ),
-            if (_rows.isNotEmpty) _TableFooter(brightness: brightness),
+            if (transactions.isNotEmpty) _TableFooter(brightness: brightness, totalCount: transactions.length),
           ],
         ),
       ),
@@ -626,225 +652,203 @@ class _HeaderCell extends StatelessWidget {
       width: width,
       child: Align(
         alignment: alignRight ? Alignment.centerRight : Alignment.centerLeft,
-        child: Text(
-          text.toUpperCase(),
-          style: GoogleFonts.inter(
-            color: DashboardPalette.textSecondary(b),
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.1,
-          ),
-        ),
+        child: Text(text.toUpperCase(), style: GoogleFonts.inter(color: DashboardPalette.textSecondary(b), fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.1)),
       ),
     );
   }
 }
 
 class _TableRow extends StatelessWidget {
-  final _ActivityRowData row;
-
+  final TransactionModel transaction;
   final Brightness brightness;
 
-  const _TableRow({required this.row, required this.brightness});
+  const _TableRow({required this.transaction, required this.brightness});
+
+  Color get _typeColor {
+    switch (transaction.type) {
+      case TransactionType.send:
+        return PayRouteColors.dashboardPrimary;
+      case TransactionType.receive:
+        return PayRouteColors.dashboardGreen;
+      case TransactionType.exchange:
+        return PayRouteColors.dashboardAccentOrange;
+      case TransactionType.withdrawal:
+        return const Color(0xFF8B5CF6);
+    }
+  }
+
+  IconData get _typeIcon {
+    switch (transaction.type) {
+      case TransactionType.send:
+        return Icons.arrow_upward;
+      case TransactionType.receive:
+        return Icons.arrow_downward;
+      case TransactionType.exchange:
+        return Icons.swap_horiz;
+      case TransactionType.withdrawal:
+        return Icons.account_balance;
+    }
+  }
+
+  Color get _statusColor {
+    switch (transaction.status) {
+      case TransactionStatus.completed:
+        return PayRouteColors.dashboardGreen;
+      case TransactionStatus.pending:
+        return PayRouteColors.dashboardAccentOrange;
+      case TransactionStatus.processing:
+        return const Color(0xFF3B82F6);
+      case TransactionStatus.failed:
+        return const Color(0xFFEF4444);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final textPrimary = DashboardPalette.textPrimary(brightness);
+    final textSecondary = DashboardPalette.textSecondary(brightness);
+    final border = DashboardPalette.border(brightness);
+    final surface = DashboardPalette.surface(brightness);
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: DashboardPalette.border(brightness))),
-      ),
+      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: border))),
       child: Row(
         children: [
-          SizedBox(width: 260, child: _RecipientCell(row: row)),
-          SizedBox(width: 120, child: _TypeCell(row: row)),
-          SizedBox(width: 150, child: _DateCell(row: row)),
-          SizedBox(width: 190, child: _RailCell(row: row)),
-          SizedBox(width: 140, child: _StatusCell(row: row)),
-          SizedBox(width: 150, child: _AmountCell(row: row)),
+          // Recipient Cell
+          SizedBox(
+            width: 260,
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: [_typeColor.withValues(alpha: 0.9), _typeColor.withValues(alpha: 0.55)]),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: border),
+                  ),
+                  child: Center(child: Text(transaction.initials, style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 11))),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(transaction.recipientName, style: GoogleFonts.inter(color: textPrimary, fontSize: 13, fontWeight: FontWeight.w700), overflow: TextOverflow.ellipsis),
+                      const SizedBox(height: 2),
+                      Text(transaction.recipientId, style: GoogleFonts.robotoMono(color: textSecondary, fontSize: 11, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Type Cell
+          SizedBox(
+            width: 120,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: surface.withValues(alpha: brightness == Brightness.dark ? 0.55 : 1),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: border),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(_typeIcon, size: 16, color: _typeColor),
+                    const SizedBox(width: 6),
+                    Text(transaction.typeLabel, style: GoogleFonts.inter(color: textSecondary, fontSize: 12, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // Date Cell
+          SizedBox(
+            width: 150,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(transaction.formattedDate, style: GoogleFonts.inter(color: textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
+                Text(transaction.formattedTime, style: GoogleFonts.inter(color: textSecondary.withValues(alpha: 0.7), fontSize: 11, fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+          // Rail Cell
+          SizedBox(
+            width: 190,
+            child: Row(
+              children: [
+                Expanded(child: Text(transaction.sourceRail, style: GoogleFonts.inter(color: textSecondary, fontSize: 12, fontWeight: FontWeight.w700), overflow: TextOverflow.ellipsis)),
+                const SizedBox(width: 6),
+                Icon(Icons.arrow_forward, size: 14, color: textSecondary.withValues(alpha: 0.7)),
+                const SizedBox(width: 6),
+                Expanded(child: Text(transaction.destinationRail, style: GoogleFonts.inter(color: textSecondary, fontSize: 12, fontWeight: FontWeight.w700), overflow: TextOverflow.ellipsis)),
+              ],
+            ),
+          ),
+          // Status Cell
+          SizedBox(
+            width: 140,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                decoration: BoxDecoration(
+                  color: _statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: _statusColor.withValues(alpha: 0.22)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(width: 6, height: 6, decoration: BoxDecoration(color: _statusColor, shape: BoxShape.circle)),
+                    const SizedBox(width: 8),
+                    Text(transaction.statusLabel, style: GoogleFonts.inter(color: _statusColor, fontSize: 12, fontWeight: FontWeight.w800)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // Amount Cell
+          SizedBox(
+            width: 150,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    transaction.formattedAmount,
+                    style: GoogleFonts.inter(
+                      color: transaction.status == TransactionStatus.failed ? textSecondary : textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      decoration: transaction.status == TransactionStatus.failed ? TextDecoration.lineThrough : TextDecoration.none,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    transaction.feeSaved != null && transaction.feeSaved! > 0 ? 'Saved ₦${transaction.feeSaved!.toStringAsFixed(2)}' : transaction.currency,
+                    style: GoogleFonts.inter(
+                      color: transaction.status == TransactionStatus.failed ? const Color(0xFFFCA5A5) : textSecondary.withValues(alpha: 0.7),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Action Cell
           SizedBox(width: 80, child: Align(alignment: Alignment.centerRight, child: Icon(Icons.more_horiz, color: DashboardPalette.iconMuted(brightness)))),
-        ],
-      ),
-    );
-  }
-}
-
-class _RecipientCell extends StatelessWidget {
-  final _ActivityRowData row;
-
-  const _RecipientCell({required this.row});
-
-  @override
-  Widget build(BuildContext context) {
-    final b = Theme.of(context).brightness;
-    final textPrimary = DashboardPalette.textPrimary(b);
-    final textSecondary = DashboardPalette.textSecondary(b);
-    final avatarGradient = LinearGradient(colors: [row.typeColor.withValues(alpha: 0.9), row.typeColor.withValues(alpha: 0.55)]);
-    return Row(
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            gradient: avatarGradient,
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: DashboardPalette.border(b)),
-          ),
-          child: Center(
-            child: Text(row.initials, style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 11)),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(row.name, style: GoogleFonts.inter(color: textPrimary, fontSize: 13, fontWeight: FontWeight.w700), overflow: TextOverflow.ellipsis),
-              const SizedBox(height: 2),
-              Text(row.id, style: GoogleFonts.robotoMono(color: textSecondary, fontSize: 11, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _TypeCell extends StatelessWidget {
-  final _ActivityRowData row;
-
-  const _TypeCell({required this.row});
-
-  @override
-  Widget build(BuildContext context) {
-    final b = Theme.of(context).brightness;
-    final surface = DashboardPalette.surface(b);
-    final border = DashboardPalette.border(b);
-    final textSecondary = DashboardPalette.textSecondary(b);
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: surface.withValues(alpha: b == Brightness.dark ? 0.55 : 1),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: border),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(row.typeIcon, size: 16, color: row.typeColor),
-            const SizedBox(width: 6),
-            Text(row.type, style: GoogleFonts.inter(color: textSecondary, fontSize: 12, fontWeight: FontWeight.w700)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DateCell extends StatelessWidget {
-  final _ActivityRowData row;
-
-  const _DateCell({required this.row});
-
-  @override
-  Widget build(BuildContext context) {
-    final b = Theme.of(context).brightness;
-    final textSecondary = DashboardPalette.textSecondary(b);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(row.date, style: GoogleFonts.inter(color: textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 2),
-        Text(row.time, style: GoogleFonts.inter(color: textSecondary.withValues(alpha: 0.7), fontSize: 11, fontWeight: FontWeight.w600)),
-      ],
-    );
-  }
-}
-
-class _RailCell extends StatelessWidget {
-  final _ActivityRowData row;
-
-  const _RailCell({required this.row});
-
-  @override
-  Widget build(BuildContext context) {
-    final b = Theme.of(context).brightness;
-    final textSecondary = DashboardPalette.textSecondary(b);
-    return Row(
-      children: [
-        Expanded(child: Text(row.railLeft, style: GoogleFonts.inter(color: textSecondary, fontSize: 12, fontWeight: FontWeight.w700), overflow: TextOverflow.ellipsis)),
-        const SizedBox(width: 6),
-        Icon(Icons.arrow_forward, size: 14, color: textSecondary.withValues(alpha: 0.7)),
-        const SizedBox(width: 6),
-        Expanded(child: Text(row.railRight, style: GoogleFonts.inter(color: textSecondary, fontSize: 12, fontWeight: FontWeight.w700), overflow: TextOverflow.ellipsis)),
-      ],
-    );
-  }
-}
-
-class _StatusCell extends StatelessWidget {
-  final _ActivityRowData row;
-
-  const _StatusCell({required this.row});
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = row.statusColor.withValues(alpha: 0.12);
-    final border = row.statusColor.withValues(alpha: 0.22);
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: border),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(width: 6, height: 6, decoration: BoxDecoration(color: row.statusColor, shape: BoxShape.circle)),
-            const SizedBox(width: 8),
-            Text(row.status, style: GoogleFonts.inter(color: row.statusColor, fontSize: 12, fontWeight: FontWeight.w800)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AmountCell extends StatelessWidget {
-  final _ActivityRowData row;
-
-  const _AmountCell({required this.row});
-
-  @override
-  Widget build(BuildContext context) {
-    final b = Theme.of(context).brightness;
-    final textPrimary = DashboardPalette.textPrimary(b);
-    final textSecondary = DashboardPalette.textSecondary(b);
-    final amountStyle = GoogleFonts.inter(
-      color: row.amountFailed ? textSecondary : textPrimary,
-      fontSize: 13,
-      fontWeight: FontWeight.w800,
-      decoration: row.amountFailed ? TextDecoration.lineThrough : TextDecoration.none,
-    );
-    final metaStyle = GoogleFonts.inter(
-      color: row.amountFailed ? const Color(0xFFFCA5A5) : textSecondary.withValues(alpha: 0.7),
-      fontSize: 11,
-      fontWeight: FontWeight.w700,
-    );
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(row.amount, style: amountStyle),
-          const SizedBox(height: 2),
-          Text(row.meta, style: metaStyle, overflow: TextOverflow.ellipsis),
         ],
       ),
     );
@@ -853,32 +857,31 @@ class _AmountCell extends StatelessWidget {
 
 class _TableFooter extends StatelessWidget {
   final Brightness brightness;
+  final int totalCount;
 
-  const _TableFooter({required this.brightness});
+  const _TableFooter({required this.brightness, required this.totalCount});
 
   @override
   Widget build(BuildContext context) {
     final textPrimary = DashboardPalette.textPrimary(brightness);
     final textSecondary = DashboardPalette.textSecondary(brightness);
+    final showingEnd = totalCount > 10 ? 10 : totalCount;
     return Container(
       color: DashboardPalette.surfaceMuted(brightness).withValues(alpha: brightness == Brightness.dark ? 0.6 : 1),
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       child: Row(
         children: [
-          Text(
-            'Showing ',
-            style: GoogleFonts.inter(color: textSecondary, fontSize: 12, fontWeight: FontWeight.w600),
-          ),
+          Text('Showing ', style: GoogleFonts.inter(color: textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
           Text('1', style: GoogleFonts.inter(color: textPrimary, fontSize: 12, fontWeight: FontWeight.w800)),
           Text(' to ', style: GoogleFonts.inter(color: textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
-          Text('5', style: GoogleFonts.inter(color: textPrimary, fontSize: 12, fontWeight: FontWeight.w800)),
+          Text('$showingEnd', style: GoogleFonts.inter(color: textPrimary, fontSize: 12, fontWeight: FontWeight.w800)),
           Text(' of ', style: GoogleFonts.inter(color: textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
-          Text('128', style: GoogleFonts.inter(color: textPrimary, fontSize: 12, fontWeight: FontWeight.w800)),
+          Text('$totalCount', style: GoogleFonts.inter(color: textPrimary, fontSize: 12, fontWeight: FontWeight.w800)),
           Text(' results', style: GoogleFonts.inter(color: textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
           const Spacer(),
           _PagerButton(label: 'Previous', enabled: false, brightness: brightness),
           const SizedBox(width: 10),
-          _PagerButton(label: 'Next', enabled: true, brightness: brightness),
+          _PagerButton(label: 'Next', enabled: totalCount > 10, brightness: brightness),
         ],
       ),
     );
@@ -888,7 +891,6 @@ class _TableFooter extends StatelessWidget {
 class _PagerButton extends StatelessWidget {
   final String label;
   final bool enabled;
-
   final Brightness brightness;
 
   const _PagerButton({required this.label, required this.enabled, required this.brightness});
@@ -901,10 +903,7 @@ class _PagerButton extends StatelessWidget {
       opacity: enabled ? 1 : 0.5,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: border),
-        ),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), border: Border.all(color: border)),
         child: Text(label, style: GoogleFonts.inter(color: textSecondary, fontSize: 12, fontWeight: FontWeight.w700)),
       ),
     );
@@ -926,48 +925,35 @@ class _EmptyState extends StatelessWidget {
         children: [
           Icon(Icons.inbox_outlined, size: 48, color: textSecondary.withValues(alpha: 0.5)),
           const SizedBox(height: 16),
-          Text(
-            'No transactions yet',
-            style: GoogleFonts.inter(color: textSecondary, fontSize: 14, fontWeight: FontWeight.w600),
-          ),
+          Text('No transactions yet', style: GoogleFonts.inter(color: textSecondary, fontSize: 14, fontWeight: FontWeight.w600)),
         ],
       ),
     );
   }
 }
 
-class _ActivityRowData {
-  final String initials;
-  final String name;
-  final String id;
-  final String type;
-  final IconData typeIcon;
-  final Color typeColor;
-  final String date;
-  final String time;
-  final String railLeft;
-  final String railRight;
-  final String status;
-  final Color statusColor;
-  final String amount;
-  final String meta;
-  final bool amountFailed;
+class _LoadingState extends StatelessWidget {
+  final Brightness brightness;
 
-  const _ActivityRowData({
-    required this.initials,
-    required this.name,
-    required this.id,
-    required this.type,
-    required this.typeIcon,
-    required this.typeColor,
-    required this.date,
-    required this.time,
-    required this.railLeft,
-    required this.railRight,
-    required this.status,
-    required this.statusColor,
-    required this.amount,
-    required this.meta,
-    this.amountFailed = false,
-  });
+  const _LoadingState({required this.brightness});
+
+  @override
+  Widget build(BuildContext context) {
+    final textSecondary = DashboardPalette.textSecondary(brightness);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 40),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 32,
+            height: 32,
+            child: CircularProgressIndicator(color: PayRouteColors.dashboardPrimary, strokeWidth: 3),
+          ),
+          const SizedBox(height: 16),
+          Text('Loading transactions...', style: GoogleFonts.inter(color: textSecondary, fontSize: 14, fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
 }

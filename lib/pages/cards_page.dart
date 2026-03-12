@@ -40,7 +40,6 @@ class _CardsPageState extends State<CardsPage> with SingleTickerProviderStateMix
     final b = Theme.of(context).brightness;
     return FinRouteResponsiveScaffold(
       selectedLabel: 'Cards',
-      background: const _CardsGlowBackground(),
       desktopHeader: const _CardsHeader(),
       mobileTitle: 'Cards',
       mobileSubtitle: 'Manage your wallets and virtual cards',
@@ -98,71 +97,6 @@ class _CardsPageState extends State<CardsPage> with SingleTickerProviderStateMix
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-class _CardsGlowBackground extends StatelessWidget {
-  const _CardsGlowBackground();
-
-  @override
-  Widget build(BuildContext context) {
-    final b = Theme.of(context).brightness;
-    // In light mode we want a crisp, clear background (no glows/gradients).
-    if (b == Brightness.light) return const SizedBox.shrink();
-    final bg = DashboardPalette.bg(b);
-    final neutralA = Colors.white.withValues(alpha: 0.06);
-    final neutralB = Colors.white.withValues(alpha: 0.035);
-    return IgnorePointer(
-      child: Stack(
-        children: [
-          Positioned(
-            top: -180,
-            left: -160,
-            child: _GlowCircle(color: neutralA, size: 700),
-          ),
-          Positioned(
-            bottom: -140,
-            right: -160,
-            child: _GlowCircle(color: neutralB, size: 600),
-          ),
-          Positioned(
-            bottom: -40,
-            left: -20,
-            right: -20,
-            child: Container(
-              height: 360,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [bg, Colors.transparent],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _GlowCircle extends StatelessWidget {
-  final Color color;
-  final double size;
-
-  const _GlowCircle({required this.color, required this.size});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(size),
-        boxShadow: [BoxShadow(color: color, blurRadius: 130, spreadRadius: 50)],
       ),
     );
   }
@@ -848,14 +782,7 @@ class _WalletRowGooglePay extends StatelessWidget {
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white.withValues(alpha: 0.10))),
         child: Padding(
           padding: const EdgeInsets.all(10),
-          child: Image.network(
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuBy8jCFADRGw3D7NZ5yzSUFFxLS5R0SNKqIEKSZG77UUApn7FOSPIE8p39ASBPtgibILo-2GshAuBt_xCArfLWDWn5XL_LYohzDF9kJcXVio_3zBxMiYveD_2b1hjJLEqHoyRR3YVuTfD-IvX0hYfc5BZTn5wQv0W3vxVcM-lCu25c9mJVizrpdITCt-KIZ249-tmkwp02BvOYxAfecGLVs9ebJ4-XBOcdGXEduhvjXA76ENFz6WZVNk0KqS1KjSe_DTwYly5jqgLz1',
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
-              debugPrint('Failed to load Google Pay icon: $error');
-              return const Icon(Icons.g_mobiledata, color: Colors.black);
-            },
-          ),
+          child: const Icon(Icons.g_mobiledata, color: Colors.black, size: 28),
         ),
       ),
       title: 'Google Pay',
@@ -952,15 +879,47 @@ class _RecentTransactionsPanel extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.only(right: 4),
-                children: const [
-                  _TxnRow(icon: Icons.flight, title: 'British Airways', meta: 'Travel • Today, 10:23 AM', amount: '-\$1,240.50', status: 'Pending', statusColor: Color(0xFF64748B)),
-                  _TxnRow(icon: Icons.restaurant, title: 'Nobu Lagos', meta: 'Dining • Yesterday', amount: '-\$450.00', status: 'Completed', statusColor: PayRouteColors.dashboardGreen),
-                  _TxnRow(icon: Icons.subscriptions, title: 'AWS EMEA', meta: 'Software • Oct 24', amount: '-\$239.99', status: 'Completed', statusColor: PayRouteColors.dashboardGreen),
-                  _TxnRow(icon: Icons.local_taxi, title: 'Uber Ride', meta: 'Transport • Oct 22', amount: '-\$24.50', status: 'Completed', statusColor: PayRouteColors.dashboardGreen),
-                  _TxnRow(icon: Icons.shopping_bag, title: 'Apple Store', meta: 'Electronics • Oct 20', amount: '-\$1,499.00', status: 'Completed', statusColor: PayRouteColors.dashboardGreen),
-                ],
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        color: b == Brightness.dark
+                            ? Colors.white.withValues(alpha: 0.04)
+                            : Colors.grey.withValues(alpha: 0.08),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: border),
+                      ),
+                      child: Icon(
+                        Icons.receipt_long_outlined,
+                        color: DashboardPalette.textSecondary(b),
+                        size: 32,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      'No transactions yet',
+                      style: GoogleFonts.inter(
+                        color: DashboardPalette.textPrimary(b),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Your card transactions will appear here',
+                      style: GoogleFonts.inter(
+                        color: DashboardPalette.textSecondary(b),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 14),

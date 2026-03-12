@@ -17,6 +17,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   bool _obscurePassword = true;
   bool _isLoading = false;
   bool _rememberMe = false;
+  bool _isOrganization = false;
   String? _errorMessage;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -663,6 +664,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  _buildAccountTypeToggle(context),
+                  const SizedBox(height: 24),
                   if (_errorMessage != null) ...[
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -714,7 +717,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   _buildRememberMeCheckbox(context),
                   const SizedBox(height: 20),
                   _buildLoginButton(context),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
+                  _buildSocialDivider(context),
+                  const SizedBox(height: 24),
+                  _buildSocialButtons(context),
+                  const SizedBox(height: 24),
                   Center(
                     child: GestureDetector(
                       onTap: _showForgotPasswordDialog,
@@ -735,6 +742,141 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildAccountTypeToggle(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final toggleWidth = constraints.maxWidth;
+        final buttonWidth = (toggleWidth - 8) / 2;
+
+        return Container(
+          height: 52,
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: PayRouteColors.noirBg.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: PayRouteColors.white.withValues(alpha: 0.05),
+            ),
+          ),
+          child: Stack(
+            children: [
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOutCubic,
+                left: _isOrganization ? buttonWidth : 0,
+                top: 0,
+                bottom: 0,
+                width: buttonWidth,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: PayRouteColors.vibrantOrange.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: PayRouteColors.vibrantOrange.withValues(alpha: 0.3),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: PayRouteColors.vibrantOrange.withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        spreadRadius: 0,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _isOrganization = false),
+                      behavior: HitTestBehavior.opaque,
+                      child: Center(
+                        child: AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 250),
+                          style: (Theme.of(context).textTheme.bodyMedium ?? const TextStyle()).copyWith(
+                            color: !_isOrganization 
+                                ? PayRouteColors.white 
+                                : const Color(0xFF94a3b8),
+                            fontWeight: !_isOrganization ? FontWeight.w700 : FontWeight.w500,
+                            letterSpacing: 0.5,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              TweenAnimationBuilder<Color?>(
+                                tween: ColorTween(
+                                  begin: const Color(0xFF64748b),
+                                  end: !_isOrganization 
+                                      ? PayRouteColors.vibrantOrange 
+                                      : const Color(0xFF64748b),
+                                ),
+                                duration: const Duration(milliseconds: 250),
+                                builder: (context, color, child) {
+                                  return Icon(
+                                    Icons.person_outline,
+                                    size: 16,
+                                    color: color,
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              const Text('Personal'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _isOrganization = true),
+                      behavior: HitTestBehavior.opaque,
+                      child: Center(
+                        child: AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 250),
+                          style: (Theme.of(context).textTheme.bodyMedium ?? const TextStyle()).copyWith(
+                            color: _isOrganization 
+                                ? PayRouteColors.white 
+                                : const Color(0xFF94a3b8),
+                            fontWeight: _isOrganization ? FontWeight.w700 : FontWeight.w500,
+                            letterSpacing: 0.5,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              TweenAnimationBuilder<Color?>(
+                                tween: ColorTween(
+                                  begin: const Color(0xFF64748b),
+                                  end: _isOrganization 
+                                      ? PayRouteColors.vibrantOrange 
+                                      : const Color(0xFF64748b),
+                                ),
+                                duration: const Duration(milliseconds: 250),
+                                builder: (context, color, child) {
+                                  return Icon(
+                                    Icons.business_outlined,
+                                    size: 16,
+                                    color: color,
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              const Text('Organization'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -930,6 +1072,160 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         ),
       ),
     );
+  }
+
+  Widget _buildSocialDivider(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 1,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.transparent,
+                  PayRouteColors.white.withValues(alpha: 0.1),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'OR CONTINUE WITH',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: const Color(0xFF64748b),
+              fontSize: 10,
+              letterSpacing: 1.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Container(
+            height: 1,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  PayRouteColors.white.withValues(alpha: 0.1),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSocialButtons(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildSocialButton(
+            context,
+            label: 'Google',
+            onTap: () => _handleSocialLogin(context, 'Google'),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _buildSocialButton(
+            context,
+            label: 'GitHub',
+            onTap: () => _handleSocialLogin(context, 'GitHub'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSocialButton(
+    BuildContext context, {
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: PayRouteColors.noirBg.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: PayRouteColors.white.withValues(alpha: 0.1),
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          hoverColor: PayRouteColors.white.withValues(alpha: 0.05),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (label == 'Google')
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'G',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 14,
+                        height: 1.1,
+                      ),
+                    ),
+                  ),
+                )
+              else if (label == 'GitHub')
+                const Icon(Icons.code, color: Colors.white, size: 20),
+              const SizedBox(width: 10),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: PayRouteColors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleSocialLogin(BuildContext context, String provider) async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final authProvider = context.read<AuthProvider>();
+    bool success = false;
+
+    if (provider == 'Google') {
+      success = await authProvider.signInWithGoogle();
+    } else if (provider == 'GitHub') {
+      success = await authProvider.signInWithGithub();
+    }
+
+    if (!mounted) return;
+
+    if (success) {
+      context.go(AppRoutes.dashboard);
+    } else {
+      setState(() {
+        _errorMessage = authProvider.errorMessage ?? '$provider login failed. Please try again.';
+        _isLoading = false;
+      });
+    }
   }
 
   Widget _buildCreateAccountButton(BuildContext context) {
