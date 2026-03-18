@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:payroute_desktop/nav.dart';
 import 'package:payroute_desktop/theme.dart';
+import 'package:payroute_desktop/widgets/support_chat_widget.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -90,6 +91,12 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
                 }),
               ),
             ),
+          ),
+          // AI Chat Widget
+          const Positioned(
+            right: 20,
+            bottom: 20,
+            child: SupportChatWidget(),
           ),
         ],
       ),

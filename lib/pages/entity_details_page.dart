@@ -7,6 +7,7 @@ import 'package:payroute_desktop/nav.dart';
 import 'package:payroute_desktop/theme.dart';
 import 'package:payroute_desktop/models/account_type.dart';
 import 'package:payroute_desktop/providers/organization_application_provider.dart';
+import 'package:payroute_desktop/widgets/support_chat_widget.dart';
 
 enum EntityType { fintech, neobank, remittance, enterprise }
 
@@ -131,6 +132,12 @@ class _EntityDetailsPageState extends State<EntityDetailsPage> {
           ),
           _BottomContinueButton(onContinue: _continue),
           const _CornerLogo(),
+          // AI Chat Widget
+          const Positioned(
+            right: 20,
+            bottom: 20,
+            child: SupportChatWidget(),
+          ),
         ],
       ),
     );

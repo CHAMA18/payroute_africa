@@ -8,6 +8,7 @@ import 'package:payroute_desktop/theme.dart';
 import 'package:payroute_desktop/models/account_type.dart';
 import 'package:payroute_desktop/utils/animations.dart';
 import 'package:payroute_desktop/widgets/animated_background.dart';
+import 'package:payroute_desktop/widgets/support_chat_widget.dart';
 
 class SelectAccountTypePage extends StatefulWidget {
   const SelectAccountTypePage({super.key});
@@ -77,6 +78,12 @@ class _SelectAccountTypePageState extends State<SelectAccountTypePage> {
                 const _Footer(),
               ],
             ),
+          ),
+          // AI Chat Widget
+          const Positioned(
+            right: 20,
+            bottom: 20,
+            child: SupportChatWidget(),
           ),
         ],
       ),

@@ -6,7 +6,60 @@ class TransactionService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static const String _collectionName = 'transactions';
 
+  List<TransactionModel> _getDemoTransactions() {
+    return [
+      TransactionModel(
+        id: 'txn-demo-1',
+        userId: 'demo-1234',
+        recipientName: 'Alice Smith',
+        recipientId: 'user-001',
+        type: TransactionType.send,
+        status: TransactionStatus.completed,
+        amount: 250000.0,
+        currency: 'NGN',
+        sourceRail: 'ACH',
+        destinationRail: 'SEPA',
+        feeSaved: 1200.0,
+        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+        updatedAt: DateTime.now().subtract(const Duration(hours: 2)),
+      ),
+      TransactionModel(
+        id: 'txn-demo-2',
+        userId: 'demo-1234',
+        recipientName: 'Bob Johnson',
+        recipientId: 'user-002',
+        type: TransactionType.receive,
+        status: TransactionStatus.completed,
+        amount: 50000.0,
+        currency: 'NGN',
+        sourceRail: 'SWIFT',
+        destinationRail: 'ACH',
+        feeSaved: 300.0,
+        createdAt: DateTime.now().subtract(const Duration(days: 1)),
+        updatedAt: DateTime.now().subtract(const Duration(days: 1)),
+      ),
+      TransactionModel(
+        id: 'txn-demo-3',
+        userId: 'demo-1234',
+        recipientName: 'Charlie Davis',
+        recipientId: 'user-003',
+        type: TransactionType.exchange,
+        status: TransactionStatus.pending,
+        amount: 15000.0,
+        currency: 'USD',
+        sourceRail: 'Card',
+        destinationRail: 'Wallet',
+        feeSaved: 0.0,
+        createdAt: DateTime.now().subtract(const Duration(days: 2)),
+        updatedAt: DateTime.now().subtract(const Duration(days: 2)),
+      ),
+    ];
+  }
+
   Future<List<TransactionModel>> getTransactionsByUserId(String userId, {int limit = 50}) async {
+    if (userId == 'demo-1234') {
+      return _getDemoTransactions();
+    }
     try {
       final query = await _firestore
           .collection(_collectionName)

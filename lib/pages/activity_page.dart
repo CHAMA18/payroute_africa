@@ -232,7 +232,7 @@ class _ActivityBodyState extends State<_ActivityBody> {
 
   Future<void> _loadData() async {
     final authProvider = context.read<AuthProvider>();
-    final userId = authProvider.firebaseUser?.uid;
+    final userId = authProvider.userModel?.id ?? authProvider.firebaseUser?.uid;
 
     if (userId != null) {
       final transactions = await _transactionService.getTransactionsByUserId(userId);

@@ -5,6 +5,7 @@ class UserModel {
   final String email;
   final String accountType;
   final String? name;
+  final String? phone;
   final String? role;
   final String? photoUrl;
   final DateTime createdAt;
@@ -15,6 +16,7 @@ class UserModel {
     required this.email,
     required this.accountType,
     this.name,
+    this.phone,
     this.role,
     this.photoUrl,
     required this.createdAt,
@@ -26,6 +28,7 @@ class UserModel {
     'email': email,
     'account_type': accountType,
     'name': name,
+    'phone': phone,
     'role': role,
     'photo_url': photoUrl,
     'created_at': Timestamp.fromDate(createdAt),
@@ -41,6 +44,7 @@ class UserModel {
       email: json['email'] as String? ?? '',
       accountType: json['account_type'] as String? ?? 'personal',
       name: json['name'] as String?,
+      phone: json['phone'] as String?,
       role: json['role'] as String?,
       photoUrl: json['photo_url'] as String?,
       createdAt: createdAtValue is Timestamp 
@@ -57,6 +61,7 @@ class UserModel {
     String? email,
     String? accountType,
     String? name,
+    String? phone,
     String? role,
     String? photoUrl,
     DateTime? createdAt,
@@ -66,6 +71,7 @@ class UserModel {
     email: email ?? this.email,
     accountType: accountType ?? this.accountType,
     name: name ?? this.name,
+    phone: phone ?? this.phone,
     role: role ?? this.role,
     photoUrl: photoUrl ?? this.photoUrl,
     createdAt: createdAt ?? this.createdAt,

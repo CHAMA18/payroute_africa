@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:payroute_desktop/nav.dart';
 import 'package:payroute_desktop/theme.dart';
+import 'package:payroute_desktop/widgets/support_chat_widget.dart';
 
 class SuccessPage extends StatefulWidget {
   const SuccessPage({super.key});
@@ -205,6 +206,12 @@ class _SuccessPageState extends State<SuccessPage> with TickerProviderStateMixin
           
           // Corner logo
           const _CornerLogo(),
+          // AI Chat Widget
+          const Positioned(
+            right: 20,
+            bottom: 20,
+            child: SupportChatWidget(),
+          ),
         ],
       ),
     );

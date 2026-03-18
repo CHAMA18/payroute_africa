@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +11,24 @@ import 'package:payroute_desktop/providers/organization_application_provider.dar
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  final originalOnError = FlutterError.onError;
+  FlutterError.onError = (FlutterErrorDetails details) {
+    if (details.exception.toString().contains('LegacyJavaScriptObject')) {
+      return;
+    }
+    if (originalOnError != null) {
+      originalOnError(details);
+    }
+  };
+
+  PlatformDispatcher.instance.onError = (error, stack) {
+    if (error.toString().contains('LegacyJavaScriptObject')) {
+      return true;
+    }
+    return false;
+  };
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );

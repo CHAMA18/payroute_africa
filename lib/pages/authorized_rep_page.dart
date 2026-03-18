@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:payroute_desktop/nav.dart';
 import 'package:payroute_desktop/theme.dart';
 import 'package:payroute_desktop/providers/organization_application_provider.dart';
+import 'package:payroute_desktop/widgets/support_chat_widget.dart';
 
 enum IdentityDocType { nationalId, passport, driversLicense }
 
@@ -162,6 +163,12 @@ class _AuthorizedRepPageState extends State<AuthorizedRepPage> {
           ),
           _BottomContinueButton(onContinue: _continue),
           const _CornerLogo(),
+          // AI Chat Widget
+          const Positioned(
+            right: 20,
+            bottom: 20,
+            child: SupportChatWidget(),
+          ),
         ],
       ),
     );

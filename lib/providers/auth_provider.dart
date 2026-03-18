@@ -17,14 +17,28 @@ class AuthProvider extends ChangeNotifier {
   String? _errorMessage;
   bool _rememberMe = false;
   bool _isInitialized = false;
+  bool _isDemoMode = false;
 
   User? get firebaseUser => _firebaseUser;
-  UserModel? get userModel => _userModel;
+  UserModel? get userModel {
+    if (_isDemoMode) {
+      return UserModel(
+        id: 'demo-1234',
+        email: 'demo@payroute.com',
+        accountType: 'personal',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        name: 'Demo User',
+      );
+    }
+    return _userModel;
+  }
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  bool get isAuthenticated => _firebaseUser != null;
+  bool get isAuthenticated => _firebaseUser != null || _isDemoMode;
   bool get rememberMe => _rememberMe;
   bool get isInitialized => _isInitialized;
+  bool get isDemoMode => _isDemoMode;
 
   AuthProvider() {
     _initializeAuth();
@@ -86,6 +100,11 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void enableDemoMode() {
+    _isDemoMode = true;
+    notifyListeners();
+  }
+
   Future<void> _onAuthStateChanged(User? user) async {
     _firebaseUser = user;
     if (user != null) {
@@ -131,7 +150,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> signUp(String email, String password, String accountType) async {
+  Future<bool> signUp(String email, String password, String accountType, {String? name, String? phone}) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -145,6 +164,8 @@ class AuthProvider extends ChangeNotifier {
           id: credential.user!.uid,
           email: email,
           accountType: accountType,
+          name: name,
+          phone: phone,
           createdAt: now,
           updatedAt: now,
         );
@@ -164,16 +185,6 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } on FirebaseAuthException catch (e) {
-      // If email already in use, try to sign in instead
-      if (e.code == 'email-already-in-use') {
-        debugPrint('AuthProvider.signUp: Email already in use, attempting sign in...');
-        _isLoading = false;
-        notifyListeners();
-        
-        // Try to sign in with the same credentials
-        return await signIn(email, password);
-      }
-      
       _isLoading = false;
       _errorMessage = _getErrorMessage(e.code);
       notifyListeners();
@@ -262,6 +273,11 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> signOut() async {
     try {
+      if (_isDemoMode) {
+        _isDemoMode = false;
+        notifyListeners();
+        return;
+      }
       // Clear remember me preference when signing out
       await setRememberMe(false);
       await _authManager.signOut();
@@ -314,7 +330,7 @@ class AuthProvider extends ChangeNotifier {
       case 'wrong-password':
         return 'Incorrect password.';
       case 'email-already-in-use':
-        return 'An account already exists with this email.';
+        return 'An account already exists with this email. Please log in instead.';
       case 'invalid-email':
         return 'Please enter a valid email address.';
       case 'weak-password':

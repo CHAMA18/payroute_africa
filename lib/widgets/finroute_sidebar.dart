@@ -4,6 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:payroute_desktop/nav.dart';
 import 'package:payroute_desktop/theme.dart';
 
+import 'package:provider/provider.dart';
+import 'package:payroute_desktop/providers/auth_provider.dart';
+
 // Global state to persist collapse state across navigations
 final ValueNotifier<bool> finRouteSidebarCollapsed = ValueNotifier<bool>(false);
 
@@ -327,7 +330,10 @@ class _LogoutButtonState extends State<_LogoutButton> {
           onExit: (_) => setState(() => _isHovered = false),
           cursor: SystemMouseCursors.click,
           child: GestureDetector(
-            onTap: () => context.go(AppRoutes.login),
+            onTap: () {
+              context.read<AuthProvider>().signOut();
+              context.go(AppRoutes.login);
+            },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               padding: EdgeInsets.symmetric(

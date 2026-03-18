@@ -7,6 +7,7 @@ version: 1.0.0+1
 environment:
   sdk: ">=3.7.0 <4.0.0"
 dependencies:
+  http: ^1.0.0
   shared_preferences: ^2.0.0
   fl_chart: 0.68.0
   flutter:
@@ -29,7 +30,21 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/fonts/
+  fonts:
+    - family: Satoshi-BlackItalic
+      fonts:
+        - asset: assets/fonts/Satoshi-BlackItalic.otf
 
+    - family: Satoshi-Bold
+      fonts:
+        - asset: assets/fonts/Satoshi-Bold.otf
+    - family: Satoshi-BoldItalic
+      fonts:
+        - asset: assets/fonts/Satoshi-BoldItalic.otf
+    - family: Satoshi-Regular
+      fonts:
+        - asset: assets/fonts/Satoshi-Regular.otf
 flutter_launcher_icons:
   android: true
   ios: true

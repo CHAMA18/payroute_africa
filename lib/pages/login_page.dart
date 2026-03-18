@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:payroute_desktop/nav.dart';
 import 'package:payroute_desktop/theme.dart';
 import 'package:payroute_desktop/providers/auth_provider.dart';
+import 'package:payroute_desktop/widgets/support_chat_widget.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -371,6 +372,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               ),
             ),
           ),
+          // AI Chat Widget
+          const Positioned(
+            right: 20,
+            bottom: 20,
+            child: SupportChatWidget(),
+          ),
         ],
       ),
     );
@@ -717,6 +724,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   _buildRememberMeCheckbox(context),
                   const SizedBox(height: 20),
                   _buildLoginButton(context),
+                  _buildDemoModeButton(context),
                   const SizedBox(height: 24),
                   _buildSocialDivider(context),
                   const SizedBox(height: 24),
@@ -1066,6 +1074,51 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     color: PayRouteColors.white,
                   ),
                 ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDemoModeButton(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: PayRouteColors.white.withValues(alpha: 0.1),
+        ),
+        color: PayRouteColors.white.withValues(alpha: 0.05),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            context.read<AuthProvider>().enableDemoMode();
+            context.go(AppRoutes.dashboard);
+          },
+          borderRadius: BorderRadius.circular(12),
+          hoverColor: PayRouteColors.white.withValues(alpha: 0.05),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Demo Mode',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: PayRouteColors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Icon(
+                  Icons.play_circle_outline,
+                  size: 16,
+                  color: Color(0xFF64748b),
+                ),
               ],
             ),
           ),

@@ -7,6 +7,7 @@ import 'package:payroute_desktop/nav.dart';
 import 'package:payroute_desktop/theme.dart';
 import 'package:payroute_desktop/providers/organization_application_provider.dart';
 import 'package:payroute_desktop/providers/auth_provider.dart';
+import 'package:payroute_desktop/widgets/support_chat_widget.dart';
 
 class ReviewPage extends StatefulWidget {
   const ReviewPage({super.key});
@@ -156,6 +157,12 @@ class _ReviewPageState extends State<ReviewPage> {
             },
           ),
           const _CornerLogo(),
+          // AI Chat Widget
+          const Positioned(
+            right: 20,
+            bottom: 20,
+            child: SupportChatWidget(),
+          ),
         ],
       ),
     );

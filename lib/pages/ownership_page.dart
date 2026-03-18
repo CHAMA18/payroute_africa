@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:payroute_desktop/nav.dart';
 import 'package:payroute_desktop/theme.dart';
 import 'package:payroute_desktop/providers/organization_application_provider.dart';
+import 'package:payroute_desktop/widgets/support_chat_widget.dart';
 
 class OwnershipPage extends StatefulWidget {
   const OwnershipPage({super.key});
@@ -106,6 +107,12 @@ class _OwnershipPageState extends State<OwnershipPage> {
           ),
           _BottomContinueButton(onContinue: _continue),
           const _CornerLogo(),
+          // AI Chat Widget
+          const Positioned(
+            right: 20,
+            bottom: 20,
+            child: SupportChatWidget(),
+          ),
         ],
       ),
     );

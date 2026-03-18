@@ -6,6 +6,9 @@ import 'package:payroute_desktop/theme.dart';
 import 'package:payroute_desktop/widgets/finroute_sidebar.dart';
 import 'package:payroute_desktop/widgets/support_chat_widget.dart';
 
+import 'package:provider/provider.dart';
+import 'package:payroute_desktop/providers/auth_provider.dart';
+
 /// Responsive scaffold for dashboard-style pages.
 ///
 /// - Desktop/tablet: persistent left sidebar.
@@ -284,6 +287,7 @@ class _FinRouteMobileBottomNav extends StatelessWidget {
                 isDestructive: true,
                 onTap: () {
                   Navigator.pop(ctx);
+                  context.read<AuthProvider>().signOut();
                   context.go(AppRoutes.login);
                 },
               ),

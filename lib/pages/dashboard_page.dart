@@ -497,6 +497,7 @@ final textSecondary = DashboardPalette.textSecondary(brightness);
 return LayoutBuilder(
 builder: (context, constraints) {
 final isCompact = constraints.maxWidth < 520;
+final isDemoMode = context.watch<AuthProvider>().isDemoMode;
 
 final currencyChip = Container(
 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -521,7 +522,7 @@ alignment: Alignment.centerLeft,
 child: Row(
 crossAxisAlignment: CrossAxisAlignment.end,
 children: [
-Text('₦0', style: GoogleFonts.inter(color: textPrimary, fontSize: isCompact ? 36 : 42, fontWeight: FontWeight.w800)),
+Text(isDemoMode ? '₦1,250,450' : '₦0', style: GoogleFonts.inter(color: textPrimary, fontSize: isCompact ? 36 : 42, fontWeight: FontWeight.w800)),
 const SizedBox(width: 6),
 Text('.00', style: GoogleFonts.inter(color: textSecondary, fontSize: isCompact ? 20 : 24)),
 ],
@@ -589,46 +590,58 @@ _WeeklyBarChart(brightness: brightness),
 }
 
 class _WeeklyBarChart extends StatefulWidget {
-final Brightness brightness;
+  final Brightness brightness;
 
-const _WeeklyBarChart({required this.brightness});
+  const _WeeklyBarChart({required this.brightness});
 
-@override
-State<_WeeklyBarChart> createState() => _WeeklyBarChartState();
+  @override
+  State<_WeeklyBarChart> createState() => _WeeklyBarChartState();
 }
 
 class _WeeklyBarChartState extends State<_WeeklyBarChart>
-with SingleTickerProviderStateMixin {
-late AnimationController _hoverController;
-int? _hoveredIndex;
+    with SingleTickerProviderStateMixin {
+  late AnimationController _hoverController;
+  int? _hoveredIndex;
 
-@override
-void initState() {
-super.initState();
-_hoverController = AnimationController(
-vsync: this,
-duration: const Duration(milliseconds: 200),
-);
-}
+  @override
+  void initState() {
+    super.initState();
+    _hoverController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+  }
 
-@override
-void dispose() {
-_hoverController.dispose();
-super.dispose();
-}
+  @override
+  void dispose() {
+    _hoverController.dispose();
+    super.dispose();
+  }
 
-@override
-Widget build(BuildContext context) {
-final textSecondary = DashboardPalette.textSecondary(widget.brightness);
-final bars = <_BarData>[
-const _BarData(label: 'Mon', percent: 0.0, value: '₦0'),
-const _BarData(label: 'Tue', percent: 0.0, value: '₦0'),
-const _BarData(label: 'Wed', percent: 0.0, value: '₦0'),
-const _BarData(label: 'Thu', percent: 0.0, value: '₦0'),
-const _BarData(label: 'Fri', percent: 0.0, value: '₦0'),
-const _BarData(label: 'Sat', percent: 0.0, value: '₦0'),
-const _BarData(label: 'Sun', percent: 0.0, value: '₦0'),
-];
+  @override
+  Widget build(BuildContext context) {
+    final textSecondary = DashboardPalette.textSecondary(widget.brightness);
+    final isDemoMode = context.watch<AuthProvider>().isDemoMode;
+
+    final bars = isDemoMode
+        ? const [
+            _BarData(label: 'Mon', percent: 0.4, value: '₦125K'),
+            _BarData(label: 'Tue', percent: 0.7, value: '₦250K'),
+            _BarData(label: 'Wed', percent: 0.3, value: '₦80K'),
+            _BarData(label: 'Thu', percent: 0.9, value: '₦320K'),
+            _BarData(label: 'Fri', percent: 0.6, value: '₦180K'),
+            _BarData(label: 'Sat', percent: 0.2, value: '₦45K'),
+            _BarData(label: 'Sun', percent: 0.5, value: '₦150K'),
+          ]
+        : const [
+            _BarData(label: 'Mon', percent: 0.0, value: '₦0'),
+            _BarData(label: 'Tue', percent: 0.0, value: '₦0'),
+            _BarData(label: 'Wed', percent: 0.0, value: '₦0'),
+            _BarData(label: 'Thu', percent: 0.0, value: '₦0'),
+            _BarData(label: 'Fri', percent: 0.0, value: '₦0'),
+            _BarData(label: 'Sat', percent: 0.0, value: '₦0'),
+            _BarData(label: 'Sun', percent: 0.0, value: '₦0'),
+          ];
 
 return SizedBox(
 height: 180,
@@ -2321,11 +2334,61 @@ Text('See All', style: GoogleFonts.inter(color: PayRouteColors.dashboardPrimary,
 ],
 ),
 const SizedBox(height: 12),
-_EmptyActivityState(brightness: brightness),
+Consumer<AuthProvider>(
+  builder: (context, auth, _) {
+    if (auth.isDemoMode) {
+      return Column(
+        children: [
+          _buildDemoActivityItem('Sent to Alice', '-₦25,000', 'Today, 2:30 PM', Icons.arrow_upward, Colors.redAccent, brightness),
+          const SizedBox(height: 12),
+          _buildDemoActivityItem('Received from Bob', '+₦150,000', 'Yesterday', Icons.arrow_downward, Colors.green, brightness),
+          const SizedBox(height: 12),
+          _buildDemoActivityItem('Netflix Subscription', '-₦4,500', 'Oct 24', Icons.movie, Colors.purpleAccent, brightness),
+        ],
+      );
+    }
+    return _EmptyActivityState(brightness: brightness);
+  },
+),
 ],
 ),
 ),
 );
+}
+
+Widget _buildDemoActivityItem(String title, String amount, String date, IconData icon, Color iconColor, Brightness brightness) {
+  final isDark = brightness == Brightness.dark;
+  return Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.1)),
+    ),
+    child: Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: iconColor.withValues(alpha: 0.2),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: iconColor, size: 16),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black, fontSize: 13, fontWeight: FontWeight.w600)),
+              Text(date, style: GoogleFonts.inter(color: Colors.grey, fontSize: 11)),
+            ],
+          ),
+        ),
+        Text(amount, style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black, fontSize: 13, fontWeight: FontWeight.w700)),
+      ],
+    ),
+  );
 }
 }
 
