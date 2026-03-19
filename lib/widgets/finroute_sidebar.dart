@@ -70,6 +70,7 @@ class FinRouteSidebar extends StatelessWidget {
                   child: ListView(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     children: [
+                      _SidebarSection(label: 'MAIN', isCollapsed: isCollapsed),
                       FinRouteNavItem(
                         label: 'Home',
                         icon: Icons.home_rounded,
@@ -85,12 +86,28 @@ class FinRouteSidebar extends StatelessWidget {
                         onTap: () => context.go(AppRoutes.wallet),
                       ),
                       FinRouteNavItem(
-                        label: 'Cross-Border',
-                        icon: Icons.public_rounded,
-                        selected: selectedLabel == 'Cross-Border',
+                        label: 'Activity',
+                        icon: Icons.history_rounded,
+                        selected: selectedLabel == 'Activity',
                         isCollapsed: isCollapsed,
-                        onTap: () => context.go(AppRoutes.crossBorder),
+                        onTap: () => context.go(AppRoutes.activity),
                       ),
+                      _SidebarSection(label: 'PAYMENTS', isCollapsed: isCollapsed),
+                      FinRouteNavItem(
+                        label: 'Smart Send',
+                        icon: Icons.bolt_rounded,
+                        selected: selectedLabel == 'Smart Send',
+                        isCollapsed: isCollapsed,
+                        onTap: () => context.go(AppRoutes.smartSend),
+                      ),
+                      FinRouteNavItem(
+                        label: 'Payment Links',
+                        icon: Icons.link_rounded,
+                        selected: selectedLabel == 'Payment Links',
+                        isCollapsed: isCollapsed,
+                        onTap: () => context.go(AppRoutes.paymentLinks),
+                      ),
+                      _SidebarSection(label: 'FINANCE', isCollapsed: isCollapsed),
                       FinRouteNavItem(
                         label: 'Saving Goals',
                         icon: Icons.savings_rounded,
@@ -769,6 +786,41 @@ class _CollapseToggleButtonState extends State<_CollapseToggleButton> {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SidebarSection extends StatelessWidget {
+  final String label;
+  final bool isCollapsed;
+
+  const _SidebarSection({required this.label, required this.isCollapsed});
+
+  @override
+  Widget build(BuildContext context) {
+    if (isCollapsed) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Divider(
+          height: 1,
+          indent: 20,
+          endIndent: 20,
+          color: DashboardPalette.border(Theme.of(context).brightness).withValues(alpha: 0.4),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(28, 24, 16, 8),
+      child: Text(
+        label,
+        style: GoogleFonts.inter(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: DashboardPalette.textSecondary(Theme.of(context).brightness).withValues(alpha: 0.5),
+          letterSpacing: 1.2,
         ),
       ),
     );

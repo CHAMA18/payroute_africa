@@ -107,7 +107,7 @@ class _CrossBorderPageState extends State<CrossBorderPage>
       mobileTitle: 'Cross-Border',
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isWide = constraints.maxWidth >= 1320;
+          final isWide = constraints.maxWidth >= 1100;
 
           if (isWide) {
             return Row(
@@ -230,31 +230,47 @@ class _CrossBorderPageState extends State<CrossBorderPage>
       ),
     ];
 
-    if (isMobile) {
-      return Column(
-        children:
-            actions
-                .map(
-                  (action) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: action,
-                  ),
-                )
-                .toList(),
-      );
-    }
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(child: actions[0]),
-        const SizedBox(width: 12),
-        Expanded(child: actions[1]),
-        const SizedBox(width: 12),
-        Expanded(child: actions[2]),
-        const SizedBox(width: 12),
-        Expanded(child: actions[3]),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // If we have enough width, use a grid or row
+        if (constraints.maxWidth > 900) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: actions[0]),
+              const SizedBox(width: 12),
+              Expanded(child: actions[1]),
+              const SizedBox(width: 12),
+              Expanded(child: actions[2]),
+              const SizedBox(width: 12),
+              Expanded(child: actions[3]),
+            ],
+          );
+        } else if (constraints.maxWidth > 500) {
+          return GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 1.34,
+            children: actions,
+          );
+        } else {
+          // Narrow mobile view
+          return Column(
+            children:
+                actions
+                    .map(
+                      (action) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: SizedBox(height: 180, child: action),
+                      ),
+                    )
+                    .toList(),
+          );
+        }
+      },
     );
   }
 
@@ -269,190 +285,183 @@ class _CrossBorderPageState extends State<CrossBorderPage>
     final isDark = brightness == Brightness.dark;
     final textPrimary = DashboardPalette.textPrimary(brightness);
     final textSecondary = DashboardPalette.textSecondary(brightness);
-    final bgColor =
-        isDark ? const Color(0xFF151B23) : Colors.white;
-    final borderColor =
-        isDark
-            ? const Color(0xFF2A3441)
-            : Colors.grey.shade200;
+    final bgColor = isDark ? const Color(0xFF151B23) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF2A3441) : Colors.grey.shade200;
 
-    return AspectRatio(
-      aspectRatio: 1.34,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxWidth < 300;
-          final outerRadius = compact ? 22.0 : 26.0;
-          final iconStage = compact ? 58.0 : 68.0;
-          final iconSize = compact ? 24.0 : 28.0;
-          final titleSize = compact ? 15.5 : 17.0;
-          final subtitleSize = compact ? 10.0 : 10.8;
-          final contentPadding =
-              compact
-                  ? const EdgeInsets.fromLTRB(14, 14, 14, 14)
-                  : const EdgeInsets.fromLTRB(16, 16, 16, 16);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 300;
+        final outerRadius = compact ? 22.0 : 26.0;
+        final iconStage = compact ? 58.0 : 68.0;
+        final iconSize = compact ? 24.0 : 28.0;
+        final titleSize = compact ? 15.5 : 17.0;
+        final subtitleSize = compact ? 10.0 : 10.8;
+        final contentPadding =
+            compact
+                ? const EdgeInsets.fromLTRB(14, 14, 14, 14)
+                : const EdgeInsets.fromLTRB(16, 16, 16, 16);
 
-          return Container(
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(outerRadius),
-              border: Border.all(color: borderColor),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  bgColor,
-                  PayRouteColors.vibrantOrange.withValues(
-                    alpha: isDark ? 0.045 : 0.025,
-                  ),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.06),
-                  blurRadius: 24,
-                  offset: const Offset(0, 10),
+        return Container(
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(outerRadius),
+            border: Border.all(color: borderColor),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                bgColor,
+                PayRouteColors.vibrantOrange.withValues(
+                  alpha: isDark ? 0.045 : 0.025,
                 ),
               ],
             ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onTap ?? () {},
-                borderRadius: BorderRadius.circular(outerRadius),
-                child: Padding(
-                  padding: contentPadding,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: iconStage,
-                            height: iconStage,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: RadialGradient(
-                                colors: [
-                                  PayRouteColors.vibrantOrange.withValues(
-                                    alpha: 0.22,
-                                  ),
-                                  PayRouteColors.vibrantOrange.withValues(
-                                    alpha: 0.08,
-                                  ),
-                                ],
-                              ),
-                              border: Border.all(
-                                color: PayRouteColors.vibrantOrange.withValues(
-                                  alpha: 0.14,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.06),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap ?? () {},
+              borderRadius: BorderRadius.circular(outerRadius),
+              child: Padding(
+                padding: contentPadding,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: iconStage,
+                          height: iconStage,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                PayRouteColors.vibrantOrange.withValues(
+                                  alpha: 0.22,
                                 ),
-                              ),
+                                PayRouteColors.vibrantOrange.withValues(
+                                  alpha: 0.08,
+                                ),
+                              ],
                             ),
-                            child: Icon(
-                              icon,
-                              color: PayRouteColors.vibrantOrange,
-                              size: iconSize,
-                            ),
-                          ),
-                          const Spacer(),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: compact ? 8 : 10,
-                              vertical: compact ? 5 : 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(
-                                alpha: isDark ? 0.04 : 0.72,
-                              ),
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(
-                                color: borderColor.withValues(alpha: 0.9),
-                              ),
-                            ),
-                            child: Text(
-                              badge,
-                              style: GoogleFonts.inter(
-                                fontSize: compact ? 9 : 10,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.6,
-                                color: PayRouteColors.vibrantOrange,
+                            border: Border.all(
+                              color: PayRouteColors.vibrantOrange.withValues(
+                                alpha: 0.14,
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                      SizedBox(height: compact ? 10 : 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.outfit(
-                                fontSize: titleSize,
-                                height: 1.12,
-                                fontWeight: FontWeight.w700,
-                                color: textPrimary,
-                              ),
-                            ),
-                            SizedBox(height: compact ? 4 : 6),
-                            Text(
-                              subtitle,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.inter(
-                                fontSize: subtitleSize,
-                                height: 1.45,
-                                fontWeight: FontWeight.w500,
-                                color: textSecondary,
-                              ),
-                            ),
-                          ],
+                        child: Icon(
+                          icon,
+                          color: PayRouteColors.vibrantOrange,
+                          size: iconSize,
                         ),
                       ),
+                      const Spacer(),
                       Container(
-                        height: compact ? 36 : 38,
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: compact ? 8 : 10,
+                          vertical: compact ? 5 : 6,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(
-                            alpha: isDark ? 0.04 : 0.86,
+                            alpha: isDark ? 0.04 : 0.72,
                           ),
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(999),
                           border: Border.all(
-                            color: borderColor.withValues(alpha: 0.92),
+                            color: borderColor.withValues(alpha: 0.9),
                           ),
                         ),
-                        child: Row(
-                          children: [
-                            Text(
-                              'Open',
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: PayRouteColors.vibrantOrange,
-                              ),
-                            ),
-                            const Spacer(),
-                            Icon(
-                              Icons.arrow_outward_rounded,
-                              color: textSecondary,
-                              size: compact ? 18 : 20,
-                            ),
-                          ],
+                        child: Text(
+                          badge,
+                          style: GoogleFonts.inter(
+                            fontSize: compact ? 9 : 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.6,
+                            color: PayRouteColors.vibrantOrange,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
+                  SizedBox(height: compact ? 10 : 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.outfit(
+                            fontSize: titleSize,
+                            height: 1.12,
+                            fontWeight: FontWeight.w700,
+                            color: textPrimary,
+                          ),
+                        ),
+                        SizedBox(height: compact ? 4 : 6),
+                        Text(
+                          subtitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            fontSize: subtitleSize,
+                            height: 1.45,
+                            fontWeight: FontWeight.w500,
+                            color: textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    height: compact ? 36 : 38,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(
+                        alpha: isDark ? 0.04 : 0.86,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: borderColor.withValues(alpha: 0.92),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Open',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: PayRouteColors.vibrantOrange,
+                          ),
+                        ),
+                        const Spacer(),
+                        Icon(
+                          Icons.arrow_outward_rounded,
+                          color: textSecondary,
+                          size: compact ? 18 : 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-          );
-        },
-      ),
-    );
-  }
+          ),
+        ),
+      );
+    },
+  );
+}
 
   Widget _buildHeader(Brightness brightness) {
     return Column(

@@ -103,7 +103,7 @@ class _ActivityHeader extends StatelessWidget {
         );
 
         final search = SizedBox(
-          width: 260,
+          width: 320,
           height: 42,
           child: TextField(
             style: GoogleFonts.inter(color: textPrimary, fontSize: 13),
@@ -585,18 +585,26 @@ class _ActivityTable extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(18),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _TableHeader(brightness: brightness),
-            if (isLoading)
-              _LoadingState(brightness: brightness)
-            else if (transactions.isEmpty)
-              _EmptyState(brightness: brightness)
-            else
+            if (isLoading) ...[
+              _TableHeader(brightness: brightness),
+              _LoadingState(brightness: brightness),
+            ] else if (transactions.isEmpty) ...[
+              _TableHeader(brightness: brightness),
+              _EmptyState(brightness: brightness),
+            ] else
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(minWidth: 980),
-                  child: Column(children: [for (final tx in transactions) _TableRow(transaction: tx, brightness: brightness)]),
+                  constraints: const BoxConstraints(minWidth: 1090),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _TableHeader(brightness: brightness),
+                      Column(children: [for (final tx in transactions) _TableRow(transaction: tx, brightness: brightness)]),
+                    ],
+                  ),
                 ),
               ),
             if (transactions.isNotEmpty) _TableFooter(brightness: brightness, totalCount: transactions.length),
@@ -617,22 +625,16 @@ class _TableHeader extends StatelessWidget {
     return Container(
       color: DashboardPalette.surfaceMuted(brightness).withValues(alpha: brightness == Brightness.dark ? 0.6 : 1),
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minWidth: 980),
-          child: Row(
-            children: [
-              _HeaderCell(text: 'Recipient / ID', width: 260),
-              _HeaderCell(text: 'Type', width: 120),
-              _HeaderCell(text: 'Date & Time', width: 150),
-              _HeaderCell(text: 'Routing Rail', width: 190),
-              _HeaderCell(text: 'Status', width: 140),
-              _HeaderCell(text: 'Amount', width: 150, alignRight: true),
-              _HeaderCell(text: 'Action', width: 80, alignRight: true),
-            ],
-          ),
-        ),
+      child: Row(
+        children: [
+          _HeaderCell(text: 'Recipient / ID', width: 260),
+          _HeaderCell(text: 'Type', width: 120),
+          _HeaderCell(text: 'Date & Time', width: 150),
+          _HeaderCell(text: 'Routing Rail', width: 190),
+          _HeaderCell(text: 'Status', width: 140),
+          _HeaderCell(text: 'Amount', width: 150, alignRight: true),
+          _HeaderCell(text: 'Action', width: 80, alignRight: true),
+        ],
       ),
     );
   }
