@@ -614,19 +614,48 @@ class _QuickActionsGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, c) {
-        final count = c.maxWidth >= 720 ? 4 : 2;
+        final count = c.maxWidth >= 1100 ? 4 : 2;
+        final aspectRatio = c.maxWidth >= 1100 ? 1.22 : 1.05;
         return GridView.count(
           crossAxisCount: count,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 14,
-          mainAxisSpacing: 14,
-          childAspectRatio: 1.05,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: aspectRatio,
           children: const [
-            _QuickActionCard(icon: Icons.ac_unit, label: 'Freeze Card', tint: Color(0xFF60A5FA)),
-            _QuickActionCard(icon: Icons.visibility, label: 'Show Details', tint: Color(0xFFC084FC)),
-            _QuickActionCard(icon: Icons.tune, label: 'Set Limits', tint: Color(0xFFFB923C)),
-            _QuickActionCard(icon: Icons.lock, label: 'Manage PIN', tint: Color(0xFF4ADE80)),
+            _QuickActionCard(
+              icon: Icons.ac_unit_rounded,
+              label: 'Freeze Card',
+              subtitle: 'Pause spend in one tap and resume instantly when needed.',
+              badge: 'Security',
+              actionLabel: 'Lock now',
+              tint: Color(0xFF60A5FA),
+            ),
+            _QuickActionCard(
+              icon: Icons.visibility_rounded,
+              label: 'Show Details',
+              subtitle: 'Reveal PAN, expiry, and CVV only inside a protected view.',
+              badge: 'Protected',
+              actionLabel: 'Reveal',
+              tint: Color(0xFFC084FC),
+            ),
+            _QuickActionCard(
+              icon: Icons.tune_rounded,
+              label: 'Set Limits',
+              subtitle: 'Control ATM, online, and point-of-sale thresholds with precision.',
+              badge: 'Control',
+              actionLabel: 'Adjust',
+              tint: Color(0xFFFB923C),
+            ),
+            _QuickActionCard(
+              icon: Icons.lock_rounded,
+              label: 'Manage PIN',
+              subtitle: 'Reset or rotate your PIN with step-up verification.',
+              badge: 'Access',
+              actionLabel: 'Update',
+              tint: Color(0xFF4ADE80),
+            ),
           ],
         );
       },
@@ -637,9 +666,19 @@ class _QuickActionsGrid extends StatelessWidget {
 class _QuickActionCard extends StatefulWidget {
   final IconData icon;
   final String label;
+  final String subtitle;
+  final String badge;
+  final String actionLabel;
   final Color tint;
 
-  const _QuickActionCard({required this.icon, required this.label, required this.tint});
+  const _QuickActionCard({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.badge,
+    required this.actionLabel,
+    required this.tint,
+  });
 
   @override
   State<_QuickActionCard> createState() => _QuickActionCardState();
@@ -651,8 +690,10 @@ class _QuickActionCardState extends State<_QuickActionCard> {
   @override
   Widget build(BuildContext context) {
     final b = Theme.of(context).brightness;
+    final isDark = b == Brightness.dark;
     final border = DashboardPalette.border(b);
-    final labelColor = _hover ? DashboardPalette.textPrimary(b) : DashboardPalette.textSecondary(b);
+    final titleColor = DashboardPalette.textPrimary(b);
+    final subtitleColor = DashboardPalette.textSecondary(b);
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hover = true),
@@ -660,35 +701,183 @@ class _QuickActionCardState extends State<_QuickActionCard> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutCubic,
+        transform:
+            Matrix4.identity()..translate(0.0, _hover ? -6.0 : 0.0),
         decoration: BoxDecoration(
-          color: b == Brightness.dark
-              ? Colors.white.withValues(alpha: _hover ? 0.05 : 0.03)
-              : (_hover ? Colors.grey.withValues(alpha: 0.08) : Colors.grey.withValues(alpha: 0.04)),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: _hover ? PayRouteColors.dashboardPrimary.withValues(alpha: 0.30) : border),
+          borderRadius: BorderRadius.circular(26),
+          border: Border.all(
+            color:
+                _hover
+                    ? widget.tint.withValues(alpha: 0.38)
+                    : border.withValues(alpha: 0.78),
+          ),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              widget.tint.withValues(alpha: isDark ? 0.14 : 0.09),
+              Colors.white.withValues(alpha: isDark ? 0.04 : 0.72),
+            ],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: widget.tint.withValues(alpha: _hover ? 0.26 : 0.12),
+              blurRadius: _hover ? 36 : 22,
+              offset: const Offset(0, 18),
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.06),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
+            ),
+          ],
         ),
         child: TextButton(
           onPressed: () {},
           style: ButtonStyle(
             overlayColor: const WidgetStatePropertyAll(Colors.transparent),
-            shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))),
+            padding: const WidgetStatePropertyAll(EdgeInsets.all(20)),
+            shape: WidgetStatePropertyAll(
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+            ),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Stack(
             children: [
-              AnimatedScale(
-                duration: const Duration(milliseconds: 180),
-                scale: _hover ? 1.10 : 1.0,
-                curve: Curves.easeOutCubic,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(color: widget.tint.withValues(alpha: 0.12), shape: BoxShape.circle),
-                  child: Icon(widget.icon, color: widget.tint, size: 20),
+              Positioned(
+                top: -36,
+                right: -26,
+                child: IgnorePointer(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    width: 140,
+                    height: 140,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          widget.tint.withValues(alpha: _hover ? 0.22 : 0.14),
+                          widget.tint.withValues(alpha: 0),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(height: 10),
-              Text(widget.label, style: GoogleFonts.inter(color: labelColor, fontSize: 13, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      AnimatedScale(
+                        duration: const Duration(milliseconds: 180),
+                        scale: _hover ? 1.08 : 1.0,
+                        curve: Curves.easeOutCubic,
+                        child: Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                widget.tint.withValues(alpha: 0.28),
+                                widget.tint.withValues(alpha: 0.12),
+                              ],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: widget.tint.withValues(alpha: 0.24),
+                                blurRadius: 22,
+                              ),
+                            ],
+                          ),
+                          child: Icon(widget.icon, color: widget.tint, size: 24),
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(
+                            alpha: isDark ? 0.08 : 0.62,
+                          ),
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(
+                            color: widget.tint.withValues(alpha: 0.18),
+                          ),
+                        ),
+                        child: Text(
+                          widget.badge,
+                          style: GoogleFonts.inter(
+                            color: widget.tint,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.7,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  Text(
+                    widget.label,
+                    style: GoogleFonts.outfit(
+                      color: titleColor,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      height: 1.05,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    widget.subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      color: subtitleColor,
+                      fontSize: 13,
+                      height: 1.45,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Text(
+                        widget.actionLabel,
+                        style: GoogleFonts.inter(
+                          color: widget.tint,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const Spacer(),
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(
+                            alpha: _hover
+                                ? (isDark ? 0.16 : 0.9)
+                                : (isDark ? 0.08 : 0.7),
+                          ),
+                          border: Border.all(
+                            color: widget.tint.withValues(alpha: 0.16),
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.arrow_outward_rounded,
+                          size: 18,
+                          color: _hover ? titleColor : subtitleColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ],
           ),
         ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Global theme controller.
 ///
@@ -8,7 +7,8 @@ import 'package:google_fonts/google_fonts.dart';
 class AppThemeController extends ChangeNotifier {
   ThemeMode _themeMode;
 
-  AppThemeController({ThemeMode initialMode = ThemeMode.dark}) : _themeMode = initialMode;
+  AppThemeController({ThemeMode initialMode = ThemeMode.dark})
+    : _themeMode = initialMode;
 
   ThemeMode get themeMode => _themeMode;
   bool get isDark => _themeMode == ThemeMode.dark;
@@ -80,7 +80,7 @@ class PayRouteColors {
   static const Color earthBlack = Color(0xFF1C1917);
   static const Color earthClay = Color(0xFF78350F);
   static const Color earthSand = Color(0xFFFDF8F1);
-  
+
   // Vibrant accents
   static const Color vibrantOrange = Color(0xFFF97316);
   static const Color vibrantOrangeDark = Color(0xFFEA580C);
@@ -91,15 +91,16 @@ class PayRouteColors {
   static const Color vibrantGold = Color(0xFFEAB308);
   static const Color electricBlue = Color(0xFF00F0FF);
   static const Color cyanGlow = Color(0xFF22D3EE);
-  
+
   // Noir theme colors
   static const Color noirBg = Color(0xFF020408);
+
   /// Noir dark background, aligned with the provided HTML (#0B1120).
   static const Color noirDark = Color(0xFF0B1120);
   static const Color noirNavy = Color(0xFF0B1121);
   static const Color noirSurface = Color(0xFF131B2E);
   static const Color noirInput = Color(0xFF050914);
-  
+
   // Electric glow colors
   static const Color electricGlow = Color(0xFF22D3EE);
 
@@ -107,7 +108,7 @@ class PayRouteColors {
   static const Color heroTeal1 = Color(0xFF0D4D4D);
   static const Color heroTeal2 = Color(0xFF0A3D3D);
   static const Color heroTeal3 = Color(0xFF082D2D);
-  
+
   // UI colors
   static const Color white = Color(0xFFFFFFFF);
   static const Color darkBg = Color(0xFF151311);
@@ -115,6 +116,7 @@ class PayRouteColors {
 
   // Dashboard specific colors
   static const Color dashboardBg = Color(0xFF0B0E14);
+
   /// Primary brand color used across dashboard UI.
   ///
   /// Kept orange to match the product’s identity and ensure consistency
@@ -141,20 +143,34 @@ class PayRouteColors {
 /// This keeps the same look in dark mode while providing a clean,
 /// modern light variant when the user toggles theme.
 class DashboardPalette {
-  static Color bg(Brightness b) => b == Brightness.dark ? PayRouteColors.dashboardBg : PayRouteColors.dashboardBgLight;
+  static Color bg(Brightness b) =>
+      b == Brightness.dark
+          ? PayRouteColors.dashboardBg
+          : PayRouteColors.dashboardBgLight;
 
-  static Color surface(Brightness b) => b == Brightness.dark ? PayRouteColors.dashboardSurfaceDark : PayRouteColors.dashboardSurfaceLight;
+  static Color surface(Brightness b) =>
+      b == Brightness.dark
+          ? PayRouteColors.dashboardSurfaceDark
+          : PayRouteColors.dashboardSurfaceLight;
 
   static Color surfaceMuted(Brightness b) =>
-      b == Brightness.dark ? PayRouteColors.dashboardSurfaceDark.withValues(alpha: 0.6) : const Color(0xFFF1F5F9);
+      b == Brightness.dark
+          ? PayRouteColors.dashboardSurfaceDark.withValues(alpha: 0.6)
+          : const Color(0xFFF1F5F9);
 
-  static Color border(Brightness b) => b == Brightness.dark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.08);
+  static Color border(Brightness b) =>
+      b == Brightness.dark
+          ? Colors.white.withValues(alpha: 0.06)
+          : Colors.black.withValues(alpha: 0.08);
 
-  static Color textPrimary(Brightness b) => b == Brightness.dark ? Colors.white : PayRouteColors.earthBlack;
+  static Color textPrimary(Brightness b) =>
+      b == Brightness.dark ? Colors.white : PayRouteColors.earthBlack;
 
-  static Color textSecondary(Brightness b) => b == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
+  static Color textSecondary(Brightness b) =>
+      b == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
 
-  static Color iconMuted(Brightness b) => b == Brightness.dark ? Colors.white70 : Colors.black54;
+  static Color iconMuted(Brightness b) =>
+      b == Brightness.dark ? Colors.white70 : Colors.black54;
 }
 
 class FontSizes {
@@ -177,6 +193,7 @@ class FontSizes {
 
 ThemeData get lightTheme => ThemeData(
   useMaterial3: true,
+  fontFamily: 'Satoshi',
   splashFactory: NoSplash.splashFactory,
   colorScheme: ColorScheme.light(
     primary: PayRouteColors.vibrantOrange,
@@ -220,9 +237,7 @@ ThemeData get lightTheme => ThemeData(
       foregroundColor: PayRouteColors.white,
       elevation: 0,
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
   ),
   textTheme: _buildTextTheme(Brightness.light),
@@ -230,6 +245,7 @@ ThemeData get lightTheme => ThemeData(
 
 ThemeData get darkTheme => ThemeData(
   useMaterial3: true,
+  fontFamily: 'Satoshi',
   splashFactory: NoSplash.splashFactory,
   colorScheme: ColorScheme.dark(
     primary: PayRouteColors.vibrantOrange,
@@ -273,9 +289,7 @@ ThemeData get darkTheme => ThemeData(
       foregroundColor: PayRouteColors.white,
       elevation: 0,
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
   ),
   textTheme: _buildTextTheme(Brightness.dark),
@@ -283,73 +297,88 @@ ThemeData get darkTheme => ThemeData(
 
 TextTheme _buildTextTheme(Brightness brightness) {
   return TextTheme(
-    displayLarge: GoogleFonts.outfit(
+    displayLarge: const TextStyle(
+      fontFamily: 'Satoshi',
       fontSize: FontSizes.displayLarge,
       fontWeight: FontWeight.w800,
       letterSpacing: -1.5,
     ),
-    displayMedium: GoogleFonts.outfit(
+    displayMedium: const TextStyle(
+      fontFamily: 'Satoshi',
       fontSize: FontSizes.displayMedium,
       fontWeight: FontWeight.w800,
       letterSpacing: -0.5,
     ),
-    displaySmall: GoogleFonts.outfit(
+    displaySmall: const TextStyle(
+      fontFamily: 'Satoshi',
       fontSize: FontSizes.displaySmall,
       fontWeight: FontWeight.w700,
     ),
-    headlineLarge: GoogleFonts.outfit(
+    headlineLarge: const TextStyle(
+      fontFamily: 'Satoshi',
       fontSize: FontSizes.headlineLarge,
       fontWeight: FontWeight.w800,
       letterSpacing: -0.5,
     ),
-    headlineMedium: GoogleFonts.outfit(
+    headlineMedium: const TextStyle(
+      fontFamily: 'Satoshi',
       fontSize: FontSizes.headlineMedium,
       fontWeight: FontWeight.w700,
     ),
-    headlineSmall: GoogleFonts.outfit(
+    headlineSmall: const TextStyle(
+      fontFamily: 'Satoshi',
       fontSize: FontSizes.headlineSmall,
       fontWeight: FontWeight.w700,
     ),
-    titleLarge: GoogleFonts.outfit(
+    titleLarge: const TextStyle(
+      fontFamily: 'Satoshi',
       fontSize: FontSizes.titleLarge,
       fontWeight: FontWeight.w600,
     ),
-    titleMedium: GoogleFonts.outfit(
+    titleMedium: const TextStyle(
+      fontFamily: 'Satoshi',
       fontSize: FontSizes.titleMedium,
       fontWeight: FontWeight.w500,
     ),
-    titleSmall: GoogleFonts.outfit(
+    titleSmall: const TextStyle(
+      fontFamily: 'Satoshi',
       fontSize: FontSizes.titleSmall,
       fontWeight: FontWeight.w500,
     ),
-    labelLarge: GoogleFonts.outfit(
+    labelLarge: const TextStyle(
+      fontFamily: 'Satoshi',
       fontSize: FontSizes.labelLarge,
       fontWeight: FontWeight.w700,
       letterSpacing: 0.5,
     ),
-    labelMedium: GoogleFonts.outfit(
+    labelMedium: const TextStyle(
+      fontFamily: 'Satoshi',
       fontSize: FontSizes.labelMedium,
       fontWeight: FontWeight.w700,
       letterSpacing: 1.0,
     ),
-    labelSmall: GoogleFonts.outfit(
+    labelSmall: const TextStyle(
+      fontFamily: 'Satoshi',
       fontSize: FontSizes.labelSmall,
       fontWeight: FontWeight.w700,
       letterSpacing: 1.5,
     ),
-    bodyLarge: GoogleFonts.outfit(
+    bodyLarge: const TextStyle(
+      fontFamily: 'Satoshi',
       fontSize: FontSizes.bodyLarge,
       fontWeight: FontWeight.w500,
       letterSpacing: 0.15,
       height: 1.6,
     ),
-    bodyMedium: GoogleFonts.outfit(
+    bodyMedium: const TextStyle(
+      fontFamily: 'Satoshi',
       fontSize: FontSizes.bodyMedium,
       fontWeight: FontWeight.w400,
       letterSpacing: 0.25,
       height: 1.5,
     ),
-    bodySmall: GoogleFonts.outfit(
+    bodySmall: const TextStyle(
+      fontFamily: 'Satoshi',
       fontSize: FontSizes.bodySmall,
       fontWeight: FontWeight.w400,
       letterSpacing: 0.4,

@@ -1,8 +1,5 @@
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart' as http;
 import 'package:payroute_desktop/theme.dart';
 import 'package:payroute_desktop/openai/openai_config.dart';
 
@@ -1020,11 +1017,13 @@ class _ChatFab extends StatelessWidget {
             AnimatedRotation(
               duration: const Duration(milliseconds: 220),
               turns: isOpen ? 0.25 : 0,
-              child: Icon(
-                isOpen ? Icons.close : Icons.auto_awesome,
-                color: Colors.white,
-                size: 26,
-              ),
+              child: isOpen
+                  ? const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 28,
+                    )
+                  : const _ChatFabIcon(),
             ),
             if (hasUnread && !isOpen)
               Positioned(
@@ -1051,6 +1050,48 @@ class _ChatFab extends StatelessWidget {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ChatFabIcon extends StatelessWidget {
+  const _ChatFabIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 30,
+      height: 30,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          const Align(
+            alignment: Alignment.center,
+            child: Icon(
+              Icons.forum_rounded,
+              color: Colors.white,
+              size: 24,
+            ),
+          ),
+          Positioned(
+            right: -1,
+            top: 1,
+            child: Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.16),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.auto_awesome,
+                color: Colors.white,
+                size: 8,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

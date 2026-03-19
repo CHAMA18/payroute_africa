@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:payroute_desktop/theme.dart';
+import 'package:payroute_desktop/widgets/finroute_responsive_scaffold.dart';
 
 class PaymentLinksPage extends StatefulWidget {
   const PaymentLinksPage({super.key});
@@ -11,11 +12,9 @@ class PaymentLinksPage extends StatefulWidget {
 
 class _PaymentLinksPageState extends State<PaymentLinksPage> {
   // Colors mimicking the exact screenshot
-  static const Color _sidebarBg = Color(0xFF10131E);
-  static const Color _mainBg = Color(0xFF151924);
   static const Color _surfaceColor = Color(0xFF1A1F2C);
   static const Color _borderColor = Color(0xFF262E40);
-  
+
   static const Color _textPrimary = Colors.white;
   static const Color _textSecondary = Color(0xFF8E99B0);
   static const Color _accentBlue = Color(0xFF2563EB);
@@ -25,177 +24,13 @@ class _PaymentLinksPageState extends State<PaymentLinksPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _mainBg,
-      body: Row(
-        children: [
-          // Sidebar
-          _buildSidebar(),
-          // Main Content
-          Expanded(
-            child: _buildMainContent(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSidebar() {
-    return Container(
-      width: 260,
-      color: _sidebarBg,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Logo Area
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: _surfaceColor,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: _accentBlue.withValues(alpha: 0.3)),
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.hub_rounded, color: _accentBlue, size: 20),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Fintech Noir',
-                      style: GoogleFonts.inter(
-                        color: _textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      'Enterprise Tier',
-                      style: GoogleFonts.inter(
-                        color: _textSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          
-          // Navigation
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                _buildNavItem(Icons.grid_view_rounded, 'Dashboard', false),
-                _buildNavItem(Icons.sync_alt_rounded, 'Transactions', false),
-                _buildNavItem(Icons.link_rounded, 'Payment Links', true),
-                _buildNavItem(Icons.group_outlined, 'Customers', false),
-                _buildNavItem(Icons.bar_chart_rounded, 'Analytics', false),
-                _buildNavItem(Icons.settings_outlined, 'Settings', false),
-              ],
-            ),
-          ),
-          
-          // Upgrade Plan Card
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: _surfaceColor.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: _borderColor),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Current Plan',
-                    style: GoogleFonts.inter(
-                      color: _textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'PRO ENTERPRISE',
-                    style: GoogleFonts.inter(
-                      color: _textPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _accentBlue,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: Text(
-                        'UPGRADE PLAN',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, String label, bool isSelected) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 4),
-      decoration: BoxDecoration(
-        color: isSelected ? _accentBlue.withValues(alpha: 0.1) : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        border: isSelected ? Border.all(color: _accentBlue.withValues(alpha: 0.2)) : null,
-      ),
-      child: ListTile(
-        leading: Icon(
-          icon,
-          color: isSelected ? _accentBlue : _textSecondary,
-          size: 20,
-        ),
-        title: Text(
-          label,
-          style: GoogleFonts.inter(
-            color: isSelected ? _accentBlue : _textSecondary,
-            fontSize: 14,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-          ),
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        onTap: () {
-          if (label == 'Dashboard') {
-            context.go('/dashboard');
-          }
-        },
+    return FinRouteResponsiveScaffold(
+      selectedLabel: 'Payment Links',
+      mobileTitle: 'Payment Links',
+      mobileSubtitle: 'Global checkout endpoints',
+      child: Container(
+        color: DashboardPalette.bg(Theme.of(context).brightness),
+        child: _buildMainContent(),
       ),
     );
   }
@@ -270,10 +105,16 @@ class _PaymentLinksPageState extends State<PaymentLinksPage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: TextField(
-                      style: GoogleFonts.inter(color: _textPrimary, fontSize: 14),
+                      style: GoogleFonts.inter(
+                        color: _textPrimary,
+                        fontSize: 14,
+                      ),
                       decoration: InputDecoration(
                         hintText: 'Search link ID or name...',
-                        hintStyle: GoogleFonts.inter(color: _textSecondary, fontSize: 14),
+                        hintStyle: GoogleFonts.inter(
+                          color: _textSecondary,
+                          fontSize: 14,
+                        ),
                         border: InputBorder.none,
                         isDense: true,
                         contentPadding: EdgeInsets.zero,
@@ -299,7 +140,10 @@ class _PaymentLinksPageState extends State<PaymentLinksPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: _accentOrange,
                 foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -315,7 +159,10 @@ class _PaymentLinksPageState extends State<PaymentLinksPage> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: _borderColor),
               ),
-              child: const Icon(Icons.notifications_none_rounded, color: _textPrimary),
+              child: const Icon(
+                Icons.notifications_none_rounded,
+                color: _textPrimary,
+              ),
             ),
           ],
         ),
@@ -418,7 +265,10 @@ class _PaymentLinksPageState extends State<PaymentLinksPage> {
                   ),
                   const SizedBox(width: 12),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     margin: const EdgeInsets.only(bottom: 6),
                     decoration: BoxDecoration(
                       color: badgeColor.withValues(alpha: 0.1),
@@ -469,10 +319,7 @@ class _PaymentLinksPageState extends State<PaymentLinksPage> {
           children: [
             Text(
               'Show:',
-              style: GoogleFonts.inter(
-                color: _textSecondary,
-                fontSize: 13,
-              ),
+              style: GoogleFonts.inter(color: _textSecondary, fontSize: 13),
             ),
             const SizedBox(width: 8),
             _buildFilterButton('10 rows', isPrimary: false, hideChevron: false),
@@ -482,11 +329,16 @@ class _PaymentLinksPageState extends State<PaymentLinksPage> {
     );
   }
 
-  Widget _buildFilterButton(String label, {required bool isPrimary, bool hideChevron = false}) {
+  Widget _buildFilterButton(
+    String label, {
+    required bool isPrimary,
+    bool hideChevron = false,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: isPrimary ? _accentBlue.withValues(alpha: 0.2) : Colors.transparent,
+        color:
+            isPrimary ? _accentBlue.withValues(alpha: 0.2) : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isPrimary ? _accentBlue.withValues(alpha: 0.5) : _borderColor,
@@ -534,28 +386,48 @@ class _PaymentLinksPageState extends State<PaymentLinksPage> {
                   flex: 3,
                   child: Text(
                     'LINK NAME & DESCRIPTION',
-                    style: GoogleFonts.inter(color: _textSecondary, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.5),
+                    style: GoogleFonts.inter(
+                      color: _textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
                 Expanded(
                   flex: 1,
                   child: Text(
                     'AMOUNT',
-                    style: GoogleFonts.inter(color: _textSecondary, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.5),
+                    style: GoogleFonts.inter(
+                      color: _textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
                 Expanded(
                   flex: 1,
                   child: Text(
                     'PAYMENTS',
-                    style: GoogleFonts.inter(color: _textSecondary, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.5),
+                    style: GoogleFonts.inter(
+                      color: _textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
                 Expanded(
                   flex: 1,
                   child: Text(
                     'STATUS',
-                    style: GoogleFonts.inter(color: _textSecondary, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.5),
+                    style: GoogleFonts.inter(
+                      color: _textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
                 SizedBox(
@@ -564,7 +436,12 @@ class _PaymentLinksPageState extends State<PaymentLinksPage> {
                     alignment: Alignment.centerRight,
                     child: Text(
                       'ACTION',
-                      style: GoogleFonts.inter(color: _textSecondary, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.5),
+                      style: GoogleFonts.inter(
+                        color: _textSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
                 ),
@@ -572,7 +449,7 @@ class _PaymentLinksPageState extends State<PaymentLinksPage> {
             ),
           ),
           Divider(height: 1, color: _borderColor),
-          
+
           // Table Rows
           _buildTableRow(
             icon: Icons.shopping_bag_rounded,
@@ -622,7 +499,7 @@ class _PaymentLinksPageState extends State<PaymentLinksPage> {
             isAutoRouting: true,
           ),
           Divider(height: 1, color: _borderColor),
-          
+
           // Table Footer / Pagination
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -703,11 +580,16 @@ class _PaymentLinksPageState extends State<PaymentLinksPage> {
                           if (isAutoRouting) ...[
                             const SizedBox(width: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: _accentBlue.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(4),
-                                border: Border.all(color: _accentBlue.withValues(alpha: 0.3)),
+                                border: Border.all(
+                                  color: _accentBlue.withValues(alpha: 0.3),
+                                ),
                               ),
                               child: Text(
                                 'AUTO-ROUTING\nACTIVE',
@@ -744,7 +626,10 @@ class _PaymentLinksPageState extends State<PaymentLinksPage> {
                 color: _textPrimary,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                fontStyle: amount.contains('Flexible') ? FontStyle.italic : FontStyle.normal,
+                fontStyle:
+                    amount.contains('Flexible')
+                        ? FontStyle.italic
+                        : FontStyle.normal,
               ),
             ),
           ),
@@ -752,10 +637,7 @@ class _PaymentLinksPageState extends State<PaymentLinksPage> {
             flex: 1,
             child: Text(
               payments,
-              style: GoogleFonts.inter(
-                color: _textSecondary,
-                fontSize: 14,
-              ),
+              style: GoogleFonts.inter(color: _textSecondary, fontSize: 14),
             ),
           ),
           Expanded(
@@ -788,7 +670,10 @@ class _PaymentLinksPageState extends State<PaymentLinksPage> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: _surfaceColor,
                     borderRadius: BorderRadius.circular(8),
@@ -797,7 +682,11 @@ class _PaymentLinksPageState extends State<PaymentLinksPage> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.copy_rounded, color: _textPrimary, size: 14),
+                      const Icon(
+                        Icons.copy_rounded,
+                        color: _textPrimary,
+                        size: 14,
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         'Copy\nLink',
@@ -812,7 +701,11 @@ class _PaymentLinksPageState extends State<PaymentLinksPage> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Icon(Icons.more_vert_rounded, color: _textSecondary, size: 20),
+                const Icon(
+                  Icons.more_vert_rounded,
+                  color: _textSecondary,
+                  size: 20,
+                ),
               ],
             ),
           ),
@@ -871,7 +764,11 @@ class _PaymentLinksPageState extends State<PaymentLinksPage> {
         children: [
           Row(
             children: [
-              const Icon(Icons.verified_user_rounded, color: _successGreen, size: 16),
+              const Icon(
+                Icons.verified_user_rounded,
+                color: _successGreen,
+                size: 16,
+              ),
               const SizedBox(width: 8),
               Text(
                 'PCI-DSS LEVEL 1 COMPLIANT',

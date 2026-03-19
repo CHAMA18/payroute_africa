@@ -9,6 +9,9 @@ import 'package:payroute_desktop/providers/auth_provider.dart';
 
 // Global state to persist collapse state across navigations
 final ValueNotifier<bool> finRouteSidebarCollapsed = ValueNotifier<bool>(false);
+final ValueNotifier<bool> finRouteSidebarFooterExpanded = ValueNotifier<bool>(
+  false,
+);
 
 /// Reusable left sidebar used across dashboard-style pages.
 ///
@@ -25,9 +28,10 @@ class FinRouteSidebar extends StatelessWidget {
     final isDark = brightness == Brightness.dark;
 
     // Create an elegant, very soft drop shadow for the sidebar container
-    final shadowColor = isDark
-        ? Colors.black.withValues(alpha: 0.6)
-        : Colors.black.withValues(alpha: 0.04);
+    final shadowColor =
+        isDark
+            ? Colors.black.withValues(alpha: 0.6)
+            : Colors.black.withValues(alpha: 0.04);
 
     return ValueListenableBuilder<bool>(
       valueListenable: finRouteSidebarCollapsed,
@@ -43,7 +47,9 @@ class FinRouteSidebar extends StatelessWidget {
             color: DashboardPalette.surface(brightness),
             border: Border(
               right: BorderSide(
-                color: DashboardPalette.border(brightness).withValues(alpha: isDark ? 0.2 : 0.6),
+                color: DashboardPalette.border(
+                  brightness,
+                ).withValues(alpha: isDark ? 0.2 : 0.6),
                 width: 1,
               ),
             ),
@@ -100,13 +106,6 @@ class FinRouteSidebar extends StatelessWidget {
                         onTap: () => context.go(AppRoutes.roiAnalytics),
                       ),
                       FinRouteNavItem(
-                        label: 'Activity',
-                        icon: Icons.receipt_long_rounded,
-                        selected: selectedLabel == 'Activity',
-                        isCollapsed: isCollapsed,
-                        onTap: () => context.go(AppRoutes.activity),
-                      ),
-                      FinRouteNavItem(
                         label: 'Exchange',
                         icon: Icons.currency_exchange_rounded,
                         selected: selectedLabel == 'Exchange',
@@ -121,7 +120,10 @@ class FinRouteSidebar extends StatelessWidget {
                         onTap: () => context.go(AppRoutes.cards),
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
                         child: Divider(
                           height: 1,
                           color: DashboardPalette.border(brightness),
@@ -137,17 +139,248 @@ class FinRouteSidebar extends StatelessWidget {
                     ],
                   ),
                 ),
-                _ThemeToggleCard(isCollapsed: isCollapsed),
-                const SizedBox(height: 8),
-                _LogoutButton(isCollapsed: isCollapsed),
-                const SizedBox(height: 8),
-                _CollapseToggleButton(isCollapsed: isCollapsed),
-                const SizedBox(height: 24),
+                _SidebarFooter(isCollapsed: isCollapsed),
               ],
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class _SidebarFooter extends StatelessWidget {
+  final bool isCollapsed;
+
+  const _SidebarFooter({required this.isCollapsed});
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+
+    return ValueListenableBuilder<bool>(
+      valueListenable: finRouteSidebarFooterExpanded,
+      builder: (context, isExpanded, child) {
+        final effectiveExpanded = isExpanded && !isCollapsed;
+
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            isCollapsed ? 10 : 16,
+            8,
+            isCollapsed ? 10 : 16,
+            24,
+          ),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOutCubic,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: DashboardPalette.border(
+                  brightness,
+                ).withValues(alpha: 0.9),
+              ),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  DashboardPalette.surface(brightness).withValues(alpha: 0.98),
+                  DashboardPalette.surface(brightness).withValues(alpha: 0.9),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.12),
+                  blurRadius: 24,
+                  offset: const Offset(0, 12),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _FooterDisclosureHeader(
+                  isCollapsed: isCollapsed,
+                  isExpanded: effectiveExpanded,
+                  onTap:
+                      () =>
+                          finRouteSidebarFooterExpanded.value =
+                              !finRouteSidebarFooterExpanded.value,
+                ),
+                ClipRect(
+                  child: AnimatedSize(
+                    duration: const Duration(milliseconds: 320),
+                    curve: Curves.easeInOutCubic,
+                    alignment: Alignment.topCenter,
+                    child:
+                        effectiveExpanded
+                            ? Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: isCollapsed ? 10 : 18,
+                                  ),
+                                  child: Divider(
+                                    height: 1,
+                                    color: DashboardPalette.border(
+                                      brightness,
+                                    ).withValues(alpha: 0.9),
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                _ThemeToggleCard(isCollapsed: isCollapsed),
+                                const SizedBox(height: 8),
+                                _LogoutButton(isCollapsed: isCollapsed),
+                                const SizedBox(height: 8),
+                                _CollapseToggleButton(isCollapsed: isCollapsed),
+                                const SizedBox(height: 12),
+                              ],
+                            )
+                            : const SizedBox.shrink(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _FooterDisclosureHeader extends StatefulWidget {
+  final bool isCollapsed;
+  final bool isExpanded;
+  final VoidCallback onTap;
+
+  const _FooterDisclosureHeader({
+    required this.isCollapsed,
+    required this.isExpanded,
+    required this.onTap,
+  });
+
+  @override
+  State<_FooterDisclosureHeader> createState() =>
+      _FooterDisclosureHeaderState();
+}
+
+class _FooterDisclosureHeaderState extends State<_FooterDisclosureHeader> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final hoverColor = DashboardPalette.textSecondary(
+      brightness,
+    ).withValues(alpha: 0.08);
+
+    return Tooltip(
+      message:
+          widget.isCollapsed
+              ? (widget.isExpanded
+                  ? 'Hide quick actions'
+                  : 'Show quick actions')
+              : '',
+      waitDuration: const Duration(milliseconds: 300),
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            padding: EdgeInsets.symmetric(
+              horizontal: widget.isCollapsed ? 10 : 16,
+              vertical: 14,
+            ),
+            decoration: BoxDecoration(
+              color: _isHovered ? hoverColor : Colors.transparent,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Row(
+              mainAxisAlignment:
+                  widget.isCollapsed
+                      ? MainAxisAlignment.center
+                      : MainAxisAlignment.start,
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        PayRouteColors.dashboardPrimary,
+                        PayRouteColors.dashboardAccentOrange,
+                      ],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: PayRouteColors.dashboardPrimary.withValues(
+                          alpha: 0.24,
+                        ),
+                        blurRadius: 18,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.tune_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                ),
+                if (!widget.isCollapsed) ...[
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Quick Controls',
+                          style: GoogleFonts.outfit(
+                            color: DashboardPalette.textPrimary(brightness),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          widget.isExpanded
+                              ? 'Theme, session, and layout controls'
+                              : 'Collapsed. Tap to reveal theme, logout, and sidebar tools',
+                          style: GoogleFonts.outfit(
+                            color: DashboardPalette.textSecondary(brightness),
+                            fontWeight: FontWeight.w400,
+                            fontSize: 12,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                AnimatedRotation(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOutCubic,
+                  turns: widget.isExpanded ? 0.5 : 0,
+                  child: Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: DashboardPalette.textSecondary(brightness),
+                    size: widget.isCollapsed ? 18 : 22,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -205,14 +438,19 @@ class _ThemeToggleCardState extends State<_ThemeToggleCard> {
         final brightness = Theme.of(context).brightness;
         final isDark = appThemeController.isDark;
 
-        final hoverColor = DashboardPalette.textSecondary(brightness).withValues(alpha: 0.06);
+        final hoverColor = DashboardPalette.textSecondary(
+          brightness,
+        ).withValues(alpha: 0.06);
         final bgColor = _isHovered ? hoverColor : Colors.transparent;
 
         return Tooltip(
-          message: widget.isCollapsed ? (isDark ? 'Light Mode' : 'Dark Mode') : '',
+          message:
+              widget.isCollapsed ? (isDark ? 'Light Mode' : 'Dark Mode') : '',
           waitDuration: const Duration(milliseconds: 400),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(
+              horizontal: widget.isCollapsed ? 6 : 16,
+            ),
             child: MouseRegion(
               onEnter: (_) => setState(() => _isHovered = true),
               onExit: (_) => setState(() => _isHovered = false),
@@ -230,62 +468,78 @@ class _ThemeToggleCardState extends State<_ThemeToggleCard> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
-                    mainAxisAlignment: widget.isCollapsed
-                        ? MainAxisAlignment.center
-                        : MainAxisAlignment.start,
+                    mainAxisAlignment:
+                        widget.isCollapsed
+                            ? MainAxisAlignment.center
+                            : MainAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.max,
                     children: [
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: PayRouteColors.dashboardPrimary.withValues(alpha: 0.12),
+                          color: PayRouteColors.dashboardPrimary.withValues(
+                            alpha: 0.12,
+                          ),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 200),
                           child: Icon(
-                            isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                            isDark
+                                ? Icons.dark_mode_rounded
+                                : Icons.light_mode_rounded,
                             key: ValueKey(isDark),
                             color: PayRouteColors.dashboardPrimary,
                             size: 20,
                           ),
                         ),
                       ),
-                      ClipRect(
-                        child: AnimatedAlign(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOutCubic,
-                          alignment: Alignment.centerLeft,
-                          widthFactor: widget.isCollapsed ? 0 : 1,
-                          child: AnimatedOpacity(
-                            duration: const Duration(milliseconds: 200),
-                            opacity: widget.isCollapsed ? 0 : 1,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const SizedBox(width: 14),
-                                Column(
+                      Expanded(
+                        child: ClipRect(
+                          child: AnimatedAlign(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOutCubic,
+                            alignment: Alignment.centerLeft,
+                            widthFactor: widget.isCollapsed ? 0 : 1,
+                            child: AnimatedOpacity(
+                              duration: const Duration(milliseconds: 200),
+                              opacity: widget.isCollapsed ? 0 : 1,
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 14),
+                                child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Text(
                                       isDark ? 'Dark Mode' : 'Light Mode',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: GoogleFonts.outfit(
-                                        color: DashboardPalette.textPrimary(brightness),
+                                        color: DashboardPalette.textPrimary(
+                                          brightness,
+                                        ),
                                         fontWeight: FontWeight.w600,
                                         fontSize: 14,
                                       ),
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      isDark ? 'Tap to switch to light' : 'Tap to switch to dark',
+                                      isDark
+                                          ? 'Tap to switch to light'
+                                          : 'Tap to switch to dark',
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                       style: GoogleFonts.outfit(
-                                        color: DashboardPalette.textSecondary(brightness),
+                                        color: DashboardPalette.textSecondary(
+                                          brightness,
+                                        ),
                                         fontWeight: FontWeight.w400,
                                         fontSize: 12,
                                       ),
                                     ),
                                   ],
                                 ),
-                              ],
+                              ),
                             ),
                           ),
                         ),
@@ -324,7 +578,7 @@ class _LogoutButtonState extends State<_LogoutButton> {
       message: widget.isCollapsed ? 'Log Out' : '',
       waitDuration: const Duration(milliseconds: 400),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: EdgeInsets.symmetric(horizontal: widget.isCollapsed ? 6 : 16),
         child: MouseRegion(
           onEnter: (_) => setState(() => _isHovered = true),
           onExit: (_) => setState(() => _isHovered = false),
@@ -345,9 +599,11 @@ class _LogoutButtonState extends State<_LogoutButton> {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
-                mainAxisAlignment: widget.isCollapsed
-                    ? MainAxisAlignment.center
-                    : MainAxisAlignment.start,
+                mainAxisAlignment:
+                    widget.isCollapsed
+                        ? MainAxisAlignment.center
+                        : MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.max,
                 children: [
                   Container(
                     padding: const EdgeInsets.all(10),
@@ -361,26 +617,30 @@ class _LogoutButtonState extends State<_LogoutButton> {
                       size: 20,
                     ),
                   ),
-                  ClipRect(
-                    child: AnimatedAlign(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOutCubic,
-                      alignment: Alignment.centerLeft,
-                      widthFactor: widget.isCollapsed ? 0 : 1,
-                      child: AnimatedOpacity(
-                        duration: const Duration(milliseconds: 200),
-                        opacity: widget.isCollapsed ? 0 : 1,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const SizedBox(width: 14),
-                            Column(
+                  Expanded(
+                    child: ClipRect(
+                      child: AnimatedAlign(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOutCubic,
+                        alignment: Alignment.centerLeft,
+                        widthFactor: widget.isCollapsed ? 0 : 1,
+                        child: AnimatedOpacity(
+                          duration: const Duration(milliseconds: 200),
+                          opacity: widget.isCollapsed ? 0 : 1,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 14),
+                            child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
                                   'Log Out',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: GoogleFonts.outfit(
-                                    color: DashboardPalette.textPrimary(brightness),
+                                    color: DashboardPalette.textPrimary(
+                                      brightness,
+                                    ),
                                     fontWeight: FontWeight.w600,
                                     fontSize: 14,
                                   ),
@@ -388,15 +648,19 @@ class _LogoutButtonState extends State<_LogoutButton> {
                                 const SizedBox(height: 2),
                                 Text(
                                   'Sign out of your account',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                   style: GoogleFonts.outfit(
-                                    color: DashboardPalette.textSecondary(brightness),
+                                    color: DashboardPalette.textSecondary(
+                                      brightness,
+                                    ),
                                     fontWeight: FontWeight.w400,
                                     fontSize: 12,
                                   ),
                                 ),
                               ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
@@ -425,14 +689,16 @@ class _CollapseToggleButtonState extends State<_CollapseToggleButton> {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final hoverColor = DashboardPalette.textSecondary(brightness).withValues(alpha: 0.06);
+    final hoverColor = DashboardPalette.textSecondary(
+      brightness,
+    ).withValues(alpha: 0.06);
     final bgColor = _isHovered ? hoverColor : Colors.transparent;
 
     return Tooltip(
       message: widget.isCollapsed ? 'Expand' : 'Collapse',
       waitDuration: const Duration(milliseconds: 400),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: EdgeInsets.symmetric(horizontal: widget.isCollapsed ? 6 : 16),
         child: MouseRegion(
           onEnter: (_) => setState(() => _isHovered = true),
           onExit: (_) => setState(() => _isHovered = false),
@@ -450,14 +716,18 @@ class _CollapseToggleButtonState extends State<_CollapseToggleButton> {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
-                mainAxisAlignment: widget.isCollapsed
-                    ? MainAxisAlignment.center
-                    : MainAxisAlignment.start,
+                mainAxisAlignment:
+                    widget.isCollapsed
+                        ? MainAxisAlignment.center
+                        : MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.max,
                 children: [
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: DashboardPalette.textSecondary(brightness).withValues(alpha: 0.1),
+                      color: DashboardPalette.textSecondary(
+                        brightness,
+                      ).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -468,28 +738,29 @@ class _CollapseToggleButtonState extends State<_CollapseToggleButton> {
                       size: 20,
                     ),
                   ),
-                  ClipRect(
-                    child: AnimatedAlign(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOutCubic,
-                      alignment: Alignment.centerLeft,
-                      widthFactor: widget.isCollapsed ? 0 : 1,
-                      child: AnimatedOpacity(
-                        duration: const Duration(milliseconds: 200),
-                        opacity: widget.isCollapsed ? 0 : 1,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const SizedBox(width: 14),
-                            Text(
+                  Expanded(
+                    child: ClipRect(
+                      child: AnimatedAlign(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOutCubic,
+                        alignment: Alignment.centerLeft,
+                        widthFactor: widget.isCollapsed ? 0 : 1,
+                        child: AnimatedOpacity(
+                          duration: const Duration(milliseconds: 200),
+                          opacity: widget.isCollapsed ? 0 : 1,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 14),
+                            child: Text(
                               'Collapse sidebar',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: GoogleFonts.outfit(
                                 color: DashboardPalette.textPrimary(brightness),
                                 fontWeight: FontWeight.w600,
                                 fontSize: 14,
                               ),
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
@@ -531,34 +802,42 @@ class _FinRouteNavItemState extends State<FinRouteNavItem> {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
 
-    final hoveredBgColor = DashboardPalette.textSecondary(brightness).withValues(alpha: 0.06);
+    final hoveredBgColor = DashboardPalette.textSecondary(
+      brightness,
+    ).withValues(alpha: 0.06);
 
-    final gradient = widget.selected
-        ? const LinearGradient(
-            colors: [
-              PayRouteColors.dashboardPrimary,
-              PayRouteColors.dashboardAccentOrange,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          )
-        : null;
+    final gradient =
+        widget.selected
+            ? const LinearGradient(
+              colors: [
+                PayRouteColors.dashboardPrimary,
+                PayRouteColors.dashboardAccentOrange,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            )
+            : null;
 
-    final bgColor = widget.selected ? null : (_isHovered ? hoveredBgColor : Colors.transparent);
+    final bgColor =
+        widget.selected
+            ? null
+            : (_isHovered ? hoveredBgColor : Colors.transparent);
 
     final selectedTextColor = Colors.white;
     final defaultTextColor = DashboardPalette.textSecondary(brightness);
     final hoverTextColor = DashboardPalette.textPrimary(brightness);
-    final textColor = widget.selected
-        ? selectedTextColor
-        : (_isHovered ? hoverTextColor : defaultTextColor);
+    final textColor =
+        widget.selected
+            ? selectedTextColor
+            : (_isHovered ? hoverTextColor : defaultTextColor);
 
     final selectedIconColor = Colors.white;
     final defaultIconColor = DashboardPalette.iconMuted(brightness);
     final hoverIconColor = DashboardPalette.textPrimary(brightness);
-    final iconColor = widget.selected
-        ? selectedIconColor
-        : (_isHovered ? hoverIconColor : defaultIconColor);
+    final iconColor =
+        widget.selected
+            ? selectedIconColor
+            : (_isHovered ? hoverIconColor : defaultIconColor);
 
     return Tooltip(
       message: widget.isCollapsed ? widget.label : '',
@@ -583,20 +862,24 @@ class _FinRouteNavItemState extends State<FinRouteNavItem> {
                 color: bgColor,
                 gradient: gradient,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: widget.selected
-                    ? [
-                        BoxShadow(
-                          color: PayRouteColors.dashboardPrimary.withValues(alpha: 0.35),
-                          blurRadius: 14,
-                          offset: const Offset(0, 6),
-                        )
-                      ]
-                    : [],
+                boxShadow:
+                    widget.selected
+                        ? [
+                          BoxShadow(
+                            color: PayRouteColors.dashboardPrimary.withValues(
+                              alpha: 0.35,
+                            ),
+                            blurRadius: 14,
+                            offset: const Offset(0, 6),
+                          ),
+                        ]
+                        : [],
               ),
               child: Row(
-                mainAxisAlignment: widget.isCollapsed
-                    ? MainAxisAlignment.center
-                    : MainAxisAlignment.start,
+                mainAxisAlignment:
+                    widget.isCollapsed
+                        ? MainAxisAlignment.center
+                        : MainAxisAlignment.start,
                 children: [
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 200),
@@ -624,7 +907,10 @@ class _FinRouteNavItemState extends State<FinRouteNavItem> {
                               widget.label,
                               style: GoogleFonts.outfit(
                                 color: textColor,
-                                fontWeight: widget.selected ? FontWeight.w600 : FontWeight.w500,
+                                fontWeight:
+                                    widget.selected
+                                        ? FontWeight.w600
+                                        : FontWeight.w500,
                                 fontSize: 15,
                               ),
                             ),
@@ -632,11 +918,12 @@ class _FinRouteNavItemState extends State<FinRouteNavItem> {
                               const SizedBox(width: 8),
                               Icon(
                                 Icons.chevron_right_rounded,
-                                color: DashboardPalette.textSecondary(brightness)
-                                    .withValues(alpha: 0.5),
+                                color: DashboardPalette.textSecondary(
+                                  brightness,
+                                ).withValues(alpha: 0.5),
                                 size: 18,
                               ),
-                            ]
+                            ],
                           ],
                         ),
                       ),

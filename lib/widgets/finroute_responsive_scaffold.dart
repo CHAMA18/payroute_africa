@@ -122,10 +122,18 @@ class _FinRouteMobileTopBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          IconButton(
-            onPressed: () => Scaffold.of(context).openDrawer(),
-            style: const ButtonStyle(overlayColor: WidgetStatePropertyAll(Colors.transparent)),
-            icon: Icon(Icons.menu, color: DashboardPalette.iconMuted(b)),
+          Builder(
+            builder:
+                (scaffoldContext) => IconButton(
+                  onPressed: () => Scaffold.of(scaffoldContext).openDrawer(),
+                  style: const ButtonStyle(
+                    overlayColor: WidgetStatePropertyAll(Colors.transparent),
+                  ),
+                  icon: Icon(
+                    Icons.menu,
+                    color: DashboardPalette.iconMuted(b),
+                  ),
+                ),
           ),
           const SizedBox(width: 4),
           Expanded(
@@ -411,5 +419,4 @@ class _MoreMenuItem extends StatelessWidget {
     );
   }
 }
-
 

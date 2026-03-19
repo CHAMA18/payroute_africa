@@ -16,16 +16,17 @@ class CrossBorderPage extends StatefulWidget {
   State<CrossBorderPage> createState() => _CrossBorderPageState();
 }
 
-class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderStateMixin {
+class _CrossBorderPageState extends State<CrossBorderPage>
+    with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late AnimationController _flowController;
   late Animation<double> _pulseAnimation;
-  
+
   String _sourceCurrency = 'USD';
   String _destinationCurrency = 'EUR';
   double _amount = 10000.00;
   String _selectedMethod = 'instant';
-  
+
   final Map<String, double> _exchangeRates = {
     'EUR': 0.92,
     'GBP': 0.79,
@@ -38,20 +39,40 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
     'MXN': 17.15,
     'SGD': 1.34,
   };
-  
+
   final Map<String, Map<String, dynamic>> _corridorData = {
     'EUR': {'name': 'Europe', 'flag': '🇪🇺', 'time': '< 30 sec', 'fee': 0.15},
-    'GBP': {'name': 'United Kingdom', 'flag': '🇬🇧', 'time': '< 30 sec', 'fee': 0.12},
+    'GBP': {
+      'name': 'United Kingdom',
+      'flag': '🇬🇧',
+      'time': '< 30 sec',
+      'fee': 0.12,
+    },
     'JPY': {'name': 'Japan', 'flag': '🇯🇵', 'time': '< 2 min', 'fee': 0.25},
     'CAD': {'name': 'Canada', 'flag': '🇨🇦', 'time': '< 30 sec', 'fee': 0.10},
-    'AUD': {'name': 'Australia', 'flag': '🇦🇺', 'time': '< 1 min', 'fee': 0.18},
-    'CHF': {'name': 'Switzerland', 'flag': '🇨🇭', 'time': '< 30 sec', 'fee': 0.20},
+    'AUD': {
+      'name': 'Australia',
+      'flag': '🇦🇺',
+      'time': '< 1 min',
+      'fee': 0.18,
+    },
+    'CHF': {
+      'name': 'Switzerland',
+      'flag': '🇨🇭',
+      'time': '< 30 sec',
+      'fee': 0.20,
+    },
     'CNY': {'name': 'China', 'flag': '🇨🇳', 'time': '< 5 min', 'fee': 0.35},
     'INR': {'name': 'India', 'flag': '🇮🇳', 'time': '< 2 min', 'fee': 0.22},
     'MXN': {'name': 'Mexico', 'flag': '🇲🇽', 'time': '< 1 min', 'fee': 0.15},
-    'SGD': {'name': 'Singapore', 'flag': '🇸🇬', 'time': '< 30 sec', 'fee': 0.12},
+    'SGD': {
+      'name': 'Singapore',
+      'flag': '🇸🇬',
+      'time': '< 30 sec',
+      'fee': 0.12,
+    },
   };
-  
+
   @override
   void initState() {
     super.initState();
@@ -59,17 +80,17 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     )..repeat(reverse: true);
-    
+
     _flowController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
     )..repeat();
-    
+
     _pulseAnimation = Tween<double>(begin: 0.6, end: 1.0).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
   }
-  
+
   @override
   void dispose() {
     _pulseController.dispose();
@@ -80,45 +101,64 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    
+
     return FinRouteResponsiveScaffold(
       selectedLabel: 'Cross-Border',
       mobileTitle: 'Cross-Border',
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isWide = constraints.maxWidth > 900;
-          
+          final isWide = constraints.maxWidth >= 1320;
+
           if (isWide) {
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   flex: 3,
-                  child: _buildMainContent(context, brightness),
+                  child: _buildMainContent(
+                    context,
+                    brightness,
+                    scrollable: true,
+                  ),
                 ),
                 Container(
-                  width: 380,
+                  width: 340,
                   decoration: BoxDecoration(
                     border: Border(
                       left: BorderSide(
-                        color: brightness == Brightness.dark
-                            ? const Color(0xFF2A3441)
-                            : Colors.grey.shade200,
+                        color:
+                            brightness == Brightness.dark
+                                ? const Color(0xFF2A3441)
+                                : Colors.grey.shade200,
                       ),
                     ),
                   ),
-                  child: _buildRightPanel(context, brightness),
+                  child: _buildRightPanel(
+                    context,
+                    brightness,
+                    scrollable: true,
+                  ),
                 ),
               ],
             );
           }
-          
+
           return SingleChildScrollView(
             padding: const EdgeInsets.only(bottom: 32),
             child: Column(
               children: [
-                _buildMainContent(context, brightness, isMobile: true),
-                _buildRightPanel(context, brightness, isMobile: true),
+                _buildMainContent(
+                  context,
+                  brightness,
+                  isMobile: true,
+                  scrollable: false,
+                ),
+                _buildRightPanel(
+                  context,
+                  brightness,
+                  isMobile: true,
+                  scrollable: false,
+                ),
               ],
             ),
           );
@@ -127,8 +167,13 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
     );
   }
 
-  Widget _buildMainContent(BuildContext context, Brightness brightness, {bool isMobile = false}) {
-    return SingleChildScrollView(
+  Widget _buildMainContent(
+    BuildContext context,
+    Brightness brightness, {
+    bool isMobile = false,
+    bool scrollable = true,
+  }) {
+    final content = Padding(
       padding: EdgeInsets.all(isMobile ? 16 : 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,91 +190,266 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
         ],
       ),
     );
+
+    if (!scrollable) return content;
+
+    return SingleChildScrollView(child: content);
   }
 
   Widget _buildQuickActions(Brightness brightness, {bool isMobile = false}) {
     final actions = [
-      _buildQuickActionCard(brightness, 'Smart Send', Icons.bolt_rounded, onTap: () => context.go(AppRoutes.smartSend)),
-      _buildQuickActionCard(brightness, 'Payment Links', Icons.link_rounded, onTap: () => context.go(AppRoutes.paymentLinks)),
-      _buildQuickActionCard(brightness, 'Scheduled Payments', Icons.schedule_send_rounded),
-      _buildQuickActionCard(brightness, 'Bill & Utilities', Icons.receipt_long_rounded),
+      _buildQuickActionCard(
+        brightness,
+        'Smart Send',
+        Icons.bolt_rounded,
+        subtitle: 'Priority corridor routing',
+        badge: 'Instant',
+        onTap: () => context.go(AppRoutes.smartSend),
+      ),
+      _buildQuickActionCard(
+        brightness,
+        'Payment Links',
+        Icons.link_rounded,
+        subtitle: 'Shareable collection flows',
+        badge: 'Commerce',
+        onTap: () => context.go(AppRoutes.paymentLinks),
+      ),
+      _buildQuickActionCard(
+        brightness,
+        'Scheduled Payments',
+        Icons.schedule_send_rounded,
+        subtitle: 'Timed disbursements at scale',
+        badge: 'Automation',
+      ),
+      _buildQuickActionCard(
+        brightness,
+        'Bill & Utilities',
+        Icons.receipt_long_rounded,
+        subtitle: 'Recurring obligations and payouts',
+        badge: 'Operations',
+      ),
     ];
 
     if (isMobile) {
       return Column(
-        children: actions.map((action) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: action,
-        )).toList(),
+        children:
+            actions
+                .map(
+                  (action) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: action,
+                  ),
+                )
+                .toList(),
       );
     }
 
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(child: actions[0]),
-        const SizedBox(width: 16),
+        const SizedBox(width: 12),
         Expanded(child: actions[1]),
-        const SizedBox(width: 16),
+        const SizedBox(width: 12),
         Expanded(child: actions[2]),
-        const SizedBox(width: 16),
+        const SizedBox(width: 12),
         Expanded(child: actions[3]),
       ],
     );
   }
 
-  Widget _buildQuickActionCard(Brightness brightness, String title, IconData icon, {VoidCallback? onTap}) {
-    final bgColor = brightness == Brightness.dark
-        ? const Color(0xFF151B23)
-        : Colors.white;
-    final borderColor = brightness == Brightness.dark
-        ? const Color(0xFF2A3441)
-        : Colors.grey.shade200;
+  Widget _buildQuickActionCard(
+    Brightness brightness,
+    String title,
+    IconData icon, {
+    required String subtitle,
+    required String badge,
+    VoidCallback? onTap,
+  }) {
+    final isDark = brightness == Brightness.dark;
+    final textPrimary = DashboardPalette.textPrimary(brightness);
+    final textSecondary = DashboardPalette.textSecondary(brightness);
+    final bgColor =
+        isDark ? const Color(0xFF151B23) : Colors.white;
+    final borderColor =
+        isDark
+            ? const Color(0xFF2A3441)
+            : Colors.grey.shade200;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: PayRouteColors.vibrantOrange.withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap ?? () {},
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: PayRouteColors.vibrantOrange.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
+    return AspectRatio(
+      aspectRatio: 1.34,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 300;
+          final outerRadius = compact ? 22.0 : 26.0;
+          final iconStage = compact ? 58.0 : 68.0;
+          final iconSize = compact ? 24.0 : 28.0;
+          final titleSize = compact ? 15.5 : 17.0;
+          final subtitleSize = compact ? 10.0 : 10.8;
+          final contentPadding =
+              compact
+                  ? const EdgeInsets.fromLTRB(14, 14, 14, 14)
+                  : const EdgeInsets.fromLTRB(16, 16, 16, 16);
+
+          return Container(
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(outerRadius),
+              border: Border.all(color: borderColor),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  bgColor,
+                  PayRouteColors.vibrantOrange.withValues(
+                    alpha: isDark ? 0.045 : 0.025,
                   ),
-                  child: Icon(icon, color: PayRouteColors.vibrantOrange),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: DashboardPalette.textPrimary(brightness),
-                  ),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.06),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
                 ),
               ],
             ),
-          ),
-        ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onTap ?? () {},
+                borderRadius: BorderRadius.circular(outerRadius),
+                child: Padding(
+                  padding: contentPadding,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: iconStage,
+                            height: iconStage,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: RadialGradient(
+                                colors: [
+                                  PayRouteColors.vibrantOrange.withValues(
+                                    alpha: 0.22,
+                                  ),
+                                  PayRouteColors.vibrantOrange.withValues(
+                                    alpha: 0.08,
+                                  ),
+                                ],
+                              ),
+                              border: Border.all(
+                                color: PayRouteColors.vibrantOrange.withValues(
+                                  alpha: 0.14,
+                                ),
+                              ),
+                            ),
+                            child: Icon(
+                              icon,
+                              color: PayRouteColors.vibrantOrange,
+                              size: iconSize,
+                            ),
+                          ),
+                          const Spacer(),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: compact ? 8 : 10,
+                              vertical: compact ? 5 : 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(
+                                alpha: isDark ? 0.04 : 0.72,
+                              ),
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
+                                color: borderColor.withValues(alpha: 0.9),
+                              ),
+                            ),
+                            child: Text(
+                              badge,
+                              style: GoogleFonts.inter(
+                                fontSize: compact ? 9 : 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.6,
+                                color: PayRouteColors.vibrantOrange,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: compact ? 10 : 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.outfit(
+                                fontSize: titleSize,
+                                height: 1.12,
+                                fontWeight: FontWeight.w700,
+                                color: textPrimary,
+                              ),
+                            ),
+                            SizedBox(height: compact ? 4 : 6),
+                            Text(
+                              subtitle,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.inter(
+                                fontSize: subtitleSize,
+                                height: 1.45,
+                                fontWeight: FontWeight.w500,
+                                color: textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        height: compact ? 36 : 38,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(
+                            alpha: isDark ? 0.04 : 0.86,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: borderColor.withValues(alpha: 0.92),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              'Open',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: PayRouteColors.vibrantOrange,
+                              ),
+                            ),
+                            const Spacer(),
+                            Icon(
+                              Icons.arrow_outward_rounded,
+                              color: textSecondary,
+                              size: compact ? 18 : 20,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -287,12 +507,12 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
   }
 
   Widget _buildTransferCard(Brightness brightness, {bool isMobile = false}) {
-    final bgColor = brightness == Brightness.dark
-        ? const Color(0xFF151B23)
-        : Colors.white;
-    final borderColor = brightness == Brightness.dark
-        ? const Color(0xFF2A3441)
-        : Colors.grey.shade200;
+    final bgColor =
+        brightness == Brightness.dark ? const Color(0xFF151B23) : Colors.white;
+    final borderColor =
+        brightness == Brightness.dark
+            ? const Color(0xFF2A3441)
+            : Colors.grey.shade200;
 
     return Container(
       decoration: BoxDecoration(
@@ -319,10 +539,10 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
             flag: '🇺🇸',
             isMobile: isMobile,
           ),
-          
+
           // Exchange Rate Indicator
           _buildExchangeIndicator(brightness, isMobile: isMobile),
-          
+
           // Destination Currency
           _buildCurrencyInput(
             brightness: brightness,
@@ -349,77 +569,152 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
   }) {
     final textColor = DashboardPalette.textPrimary(brightness);
     final mutedColor = DashboardPalette.textSecondary(brightness);
-    
+
     return Padding(
       padding: EdgeInsets.all(isMobile ? 16 : 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: mutedColor,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = isMobile || constraints.maxWidth < 520;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: isSource
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: mutedColor,
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (compact) ...[
+                isSource
                     ? TextField(
-                        style: GoogleFonts.outfit(
-                          fontSize: isMobile ? 24 : 32,
+                      style: GoogleFonts.outfit(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w600,
+                        color: textColor,
+                      ),
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        hintText: '0.00',
+                        hintStyle: GoogleFonts.outfit(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                          color: mutedColor.withValues(alpha: 0.5),
+                        ),
+                        prefixText: '\$ ',
+                        prefixStyle: GoogleFonts.outfit(
+                          fontSize: 24,
                           fontWeight: FontWeight.w600,
                           color: textColor,
                         ),
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          hintText: '0.00',
-                          hintStyle: GoogleFonts.outfit(
-                            fontSize: isMobile ? 24 : 32,
-                            fontWeight: FontWeight.w600,
-                            color: mutedColor.withValues(alpha: 0.5),
-                          ),
-                          prefixText: '\$ ',
-                          prefixStyle: GoogleFonts.outfit(
-                            fontSize: isMobile ? 24 : 32,
-                            fontWeight: FontWeight.w600,
-                            color: textColor,
-                          ),
-                        ),
-                        keyboardType: TextInputType.number,
-                        controller: TextEditingController(text: amount.toStringAsFixed(2)),
-                        onChanged: (value) {
-                          setState(() {
-                            _amount = double.tryParse(value) ?? 0;
-                          });
-                        },
-                      )
-                    : Text(
-                        '${_getCurrencySymbol(_destinationCurrency)} ${amount.toStringAsFixed(2)}',
-                        style: GoogleFonts.outfit(
-                          fontSize: isMobile ? 24 : 32,
-                          fontWeight: FontWeight.w600,
-                          color: PayRouteColors.vibrantOrange,
-                        ),
                       ),
-              ),
-              const SizedBox(width: 12),
-              _buildCurrencySelector(brightness, currency, flag, isSource, isMobile: isMobile),
+                      keyboardType: TextInputType.number,
+                      controller: TextEditingController(
+                        text: amount.toStringAsFixed(2),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          _amount = double.tryParse(value) ?? 0;
+                        });
+                      },
+                    )
+                    : Text(
+                      '${_getCurrencySymbol(_destinationCurrency)} ${amount.toStringAsFixed(2)}',
+                      style: GoogleFonts.outfit(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w600,
+                        color: PayRouteColors.vibrantOrange,
+                      ),
+                    ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: _buildCurrencySelector(
+                    brightness,
+                    currency,
+                    flag,
+                    isSource,
+                    isMobile: true,
+                  ),
+                ),
+              ] else
+                Row(
+                  children: [
+                    Expanded(
+                      child:
+                          isSource
+                              ? TextField(
+                                style: GoogleFonts.outfit(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.w600,
+                                  color: textColor,
+                                ),
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  hintText: '0.00',
+                                  hintStyle: GoogleFonts.outfit(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.w600,
+                                    color: mutedColor.withValues(alpha: 0.5),
+                                  ),
+                                  prefixText: '\$ ',
+                                  prefixStyle: GoogleFonts.outfit(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.w600,
+                                    color: textColor,
+                                  ),
+                                ),
+                                keyboardType: TextInputType.number,
+                                controller: TextEditingController(
+                                  text: amount.toStringAsFixed(2),
+                                ),
+                                onChanged: (value) {
+                                  setState(() {
+                                    _amount = double.tryParse(value) ?? 0;
+                                  });
+                                },
+                              )
+                              : Text(
+                                '${_getCurrencySymbol(_destinationCurrency)} ${amount.toStringAsFixed(2)}',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.w600,
+                                  color: PayRouteColors.vibrantOrange,
+                                ),
+                              ),
+                    ),
+                    const SizedBox(width: 12),
+                    _buildCurrencySelector(
+                      brightness,
+                      currency,
+                      flag,
+                      isSource,
+                      isMobile: false,
+                    ),
+                  ],
+                ),
             ],
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildCurrencySelector(Brightness brightness, String currency, String flag, bool isSource, {bool isMobile = false}) {
-    final bgColor = brightness == Brightness.dark
-        ? const Color(0xFF1E2530)
-        : Colors.grey.shade100;
-    
+  Widget _buildCurrencySelector(
+    Brightness brightness,
+    String currency,
+    String flag,
+    bool isSource, {
+    bool isMobile = false,
+  }) {
+    final bgColor =
+        brightness == Brightness.dark
+            ? const Color(0xFF1E2530)
+            : Colors.grey.shade100;
+
     return PopupMenuButton<String>(
       initialValue: isSource ? _sourceCurrency : _destinationCurrency,
       onSelected: (value) {
@@ -431,17 +726,22 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
           }
         });
       },
-      itemBuilder: (context) => [
-        if (isSource)
-          _buildCurrencyMenuItem('USD', '🇺🇸', 'US Dollar'),
-        ..._exchangeRates.keys.map((code) => _buildCurrencyMenuItem(
-          code,
-          _corridorData[code]?['flag'] ?? '🌍',
-          _corridorData[code]?['name'] ?? code,
-        )),
-      ],
+      itemBuilder:
+          (context) => [
+            if (isSource) _buildCurrencyMenuItem('USD', '🇺🇸', 'US Dollar'),
+            ..._exchangeRates.keys.map(
+              (code) => _buildCurrencyMenuItem(
+                code,
+                _corridorData[code]?['flag'] ?? '🌍',
+                _corridorData[code]?['name'] ?? code,
+              ),
+            ),
+          ],
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16, vertical: isMobile ? 10 : 12),
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile ? 12 : 16,
+          vertical: isMobile ? 10 : 12,
+        ),
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(12),
@@ -471,7 +771,11 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
     );
   }
 
-  PopupMenuItem<String> _buildCurrencyMenuItem(String code, String flag, String name) {
+  PopupMenuItem<String> _buildCurrencyMenuItem(
+    String code,
+    String flag,
+    String name,
+  ) {
     return PopupMenuItem(
       value: code,
       child: Row(
@@ -482,7 +786,10 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(code, style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-              Text(name, style: GoogleFonts.inter(fontSize: 12, color: Colors.grey)),
+              Text(
+                name,
+                style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
+              ),
             ],
           ),
         ],
@@ -490,14 +797,21 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
     );
   }
 
-  Widget _buildExchangeIndicator(Brightness brightness, {bool isMobile = false}) {
-    final borderColor = brightness == Brightness.dark
-        ? const Color(0xFF2A3441)
-        : Colors.grey.shade200;
+  Widget _buildExchangeIndicator(
+    Brightness brightness, {
+    bool isMobile = false,
+  }) {
+    final borderColor =
+        brightness == Brightness.dark
+            ? const Color(0xFF2A3441)
+            : Colors.grey.shade200;
     final rate = _exchangeRates[_destinationCurrency] ?? 1;
-    
+
     return Container(
-      padding: EdgeInsets.symmetric(vertical: isMobile ? 12 : 16, horizontal: isMobile ? 16 : 0),
+      padding: EdgeInsets.symmetric(
+        vertical: isMobile ? 12 : 16,
+        horizontal: isMobile ? 16 : 0,
+      ),
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(color: borderColor),
@@ -505,7 +819,8 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
         ),
       ),
       child: Row(
-        mainAxisAlignment: isMobile ? MainAxisAlignment.start : MainAxisAlignment.center,
+        mainAxisAlignment:
+            isMobile ? MainAxisAlignment.start : MainAxisAlignment.center,
         children: [
           AnimatedBuilder(
             animation: _pulseAnimation,
@@ -515,8 +830,12 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      PayRouteColors.vibrantOrange.withValues(alpha: _pulseAnimation.value * 0.3),
-                      PayRouteColors.vibrantOrangeDark.withValues(alpha: _pulseAnimation.value * 0.3),
+                      PayRouteColors.vibrantOrange.withValues(
+                        alpha: _pulseAnimation.value * 0.3,
+                      ),
+                      PayRouteColors.vibrantOrangeDark.withValues(
+                        alpha: _pulseAnimation.value * 0.3,
+                      ),
                     ],
                   ),
                   shape: BoxShape.circle,
@@ -548,7 +867,10 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.green.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
@@ -556,7 +878,11 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.trending_up, size: 12, color: Colors.green),
+                          const Icon(
+                            Icons.trending_up,
+                            size: 12,
+                            color: Colors.green,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             '+0.12%',
@@ -587,13 +913,16 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
     );
   }
 
-  Widget _buildCorridorVisualization(Brightness brightness, {bool isMobile = false}) {
-    final bgColor = brightness == Brightness.dark
-        ? const Color(0xFF151B23)
-        : Colors.white;
-    final borderColor = brightness == Brightness.dark
-        ? const Color(0xFF2A3441)
-        : Colors.grey.shade200;
+  Widget _buildCorridorVisualization(
+    Brightness brightness, {
+    bool isMobile = false,
+  }) {
+    final bgColor =
+        brightness == Brightness.dark ? const Color(0xFF151B23) : Colors.white;
+    final borderColor =
+        brightness == Brightness.dark
+            ? const Color(0xFF2A3441)
+            : Colors.grey.shade200;
     final corridor = _corridorData[_destinationCurrency]!;
 
     return Container(
@@ -603,136 +932,210 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: borderColor),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = isMobile || constraints.maxWidth < 620;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  'Transfer Corridor',
-                  style: GoogleFonts.outfit(
-                    fontSize: isMobile ? 16 : 18,
-                    fontWeight: FontWeight.w600,
-                    color: DashboardPalette.textPrimary(brightness),
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                runSpacing: 12,
+                spacing: 12,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    'Transfer Corridor',
+                    style: GoogleFonts.outfit(
+                      fontSize: isMobile ? 16 : 18,
+                      fontWeight: FontWeight.w600,
+                      color: DashboardPalette.textPrimary(brightness),
+                    ),
                   ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          PayRouteColors.vibrantOrange.withValues(alpha: 0.15),
+                          PayRouteColors.vibrantOrangeDark.withValues(
+                            alpha: 0.15,
+                          ),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Corridor Active',
+                          style: GoogleFonts.inter(
+                            fontSize: isMobile ? 10 : 12,
+                            fontWeight: FontWeight.w600,
+                            color: PayRouteColors.vibrantOrange,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                height: compact ? 180 : 120,
+                child: AnimatedBuilder(
+                  animation: _flowController,
+                  builder: (context, child) {
+                    return CustomPaint(
+                      painter: _CorridorPainter(
+                        progress: _flowController.value,
+                        brightness: brightness,
+                        sourceFlag: '🇺🇸',
+                        destFlag: corridor['flag'],
+                      ),
+                      child:
+                          compact
+                              ? Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _buildEndpoint(
+                                    brightness,
+                                    '🇺🇸',
+                                    'United States',
+                                    'Source',
+                                    isMobile: true,
+                                  ),
+                                  const SizedBox(height: 20),
+                                  _buildEndpoint(
+                                    brightness,
+                                    corridor['flag'],
+                                    corridor['name'],
+                                    'Destination',
+                                    isMobile: true,
+                                  ),
+                                ],
+                              )
+                              : Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  _buildEndpoint(
+                                    brightness,
+                                    '🇺🇸',
+                                    'United States',
+                                    'Source',
+                                    isMobile: isMobile,
+                                  ),
+                                  _buildEndpoint(
+                                    brightness,
+                                    corridor['flag'],
+                                    corridor['name'],
+                                    'Destination',
+                                    isMobile: isMobile,
+                                  ),
+                                ],
+                              ),
+                    );
+                  },
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      PayRouteColors.vibrantOrange.withValues(alpha: 0.15),
-                      PayRouteColors.vibrantOrangeDark.withValues(alpha: 0.15),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: Colors.green,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Corridor Active',
-                      style: GoogleFonts.inter(
-                        fontSize: isMobile ? 10 : 12,
-                        fontWeight: FontWeight.w600,
-                        color: PayRouteColors.vibrantOrange,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          
-          // Animated corridor visualization
-          SizedBox(
-            height: 120,
-            child: AnimatedBuilder(
-              animation: _flowController,
-              builder: (context, child) {
-                return CustomPaint(
-                  painter: _CorridorPainter(
-                    progress: _flowController.value,
-                    brightness: brightness,
-                    sourceFlag: '🇺🇸',
-                    destFlag: corridor['flag'],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildEndpoint(brightness, '🇺🇸', 'United States', 'Source', isMobile: isMobile),
-                      _buildEndpoint(brightness, corridor['flag'], corridor['name'], 'Destination', isMobile: isMobile),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-          
-          const SizedBox(height: 24),
-          
-          // Corridor stats
-          Row(
-            children: [
-              Expanded(
-                child: _buildCorridorStat(
+              const SizedBox(height: 24),
+              if (compact) ...[
+                _buildCorridorStat(
                   brightness,
                   Icons.speed_rounded,
                   'Est. Time',
                   corridor['time'],
-                  isMobile: isMobile,
+                  isMobile: true,
                 ),
-              ),
-              SizedBox(width: isMobile ? 8 : 16),
-              Expanded(
-                child: _buildCorridorStat(
+                const SizedBox(height: 10),
+                _buildCorridorStat(
                   brightness,
                   Icons.percent_rounded,
                   'Fee',
                   '${corridor['fee']}%',
-                  isMobile: isMobile,
+                  isMobile: true,
                 ),
-              ),
-              SizedBox(width: isMobile ? 8 : 16),
-              Expanded(
-                child: _buildCorridorStat(
+                const SizedBox(height: 10),
+                _buildCorridorStat(
                   brightness,
                   Icons.verified_rounded,
-                  isMobile ? 'Cleared' : 'Compliance',
+                  'Cleared',
                   'Pre-cleared',
-                  isMobile: isMobile,
+                  isMobile: true,
                 ),
-              ),
+              ] else
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildCorridorStat(
+                        brightness,
+                        Icons.speed_rounded,
+                        'Est. Time',
+                        corridor['time'],
+                        isMobile: isMobile,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildCorridorStat(
+                        brightness,
+                        Icons.percent_rounded,
+                        'Fee',
+                        '${corridor['fee']}%',
+                        isMobile: isMobile,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildCorridorStat(
+                        brightness,
+                        Icons.verified_rounded,
+                        'Compliance',
+                        'Pre-cleared',
+                        isMobile: isMobile,
+                      ),
+                    ),
+                  ],
+                ),
             ],
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildEndpoint(Brightness brightness, String flag, String name, String label, {bool isMobile = false}) {
+  Widget _buildEndpoint(
+    Brightness brightness,
+    String flag,
+    String name,
+    String label, {
+    bool isMobile = false,
+  }) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
           padding: EdgeInsets.all(isMobile ? 8 : 12),
           decoration: BoxDecoration(
-            color: brightness == Brightness.dark
-                ? const Color(0xFF1E2530)
-                : Colors.grey.shade100,
+            color:
+                brightness == Brightness.dark
+                    ? const Color(0xFF1E2530)
+                    : Colors.grey.shade100,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: PayRouteColors.vibrantOrange.withValues(alpha: 0.3),
@@ -762,18 +1165,29 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
     );
   }
 
-  Widget _buildCorridorStat(Brightness brightness, IconData icon, String label, String value, {bool isMobile = false}) {
+  Widget _buildCorridorStat(
+    Brightness brightness,
+    IconData icon,
+    String label,
+    String value, {
+    bool isMobile = false,
+  }) {
     return Container(
       padding: EdgeInsets.all(isMobile ? 10 : 16),
       decoration: BoxDecoration(
-        color: brightness == Brightness.dark
-            ? const Color(0xFF1E2530)
-            : Colors.grey.shade50,
+        color:
+            brightness == Brightness.dark
+                ? const Color(0xFF1E2530)
+                : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
-          Icon(icon, color: PayRouteColors.vibrantOrange, size: isMobile ? 20 : 24),
+          Icon(
+            icon,
+            color: PayRouteColors.vibrantOrange,
+            size: isMobile ? 20 : 24,
+          ),
           const SizedBox(height: 8),
           FittedBox(
             fit: BoxFit.scaleDown,
@@ -803,12 +1217,12 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
   }
 
   Widget _buildTransferMethods(Brightness brightness, {bool isMobile = false}) {
-    final bgColor = brightness == Brightness.dark
-        ? const Color(0xFF151B23)
-        : Colors.white;
-    final borderColor = brightness == Brightness.dark
-        ? const Color(0xFF2A3441)
-        : Colors.grey.shade200;
+    final bgColor =
+        brightness == Brightness.dark ? const Color(0xFF151B23) : Colors.white;
+    final borderColor =
+        brightness == Brightness.dark
+            ? const Color(0xFF2A3441)
+            : Colors.grey.shade200;
 
     return Container(
       padding: EdgeInsets.all(isMobile ? 16 : 24),
@@ -877,12 +1291,18 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
     bool isMobile = false,
   }) {
     final isSelected = _selectedMethod == id;
-    final bgColor = isSelected
-        ? PayRouteColors.vibrantOrange.withValues(alpha: 0.1)
-        : (brightness == Brightness.dark ? const Color(0xFF1E2530) : Colors.grey.shade50);
-    final borderColor = isSelected
-        ? PayRouteColors.vibrantOrange
-        : (brightness == Brightness.dark ? const Color(0xFF2A3441) : Colors.grey.shade200);
+    final bgColor =
+        isSelected
+            ? PayRouteColors.vibrantOrange.withValues(alpha: 0.1)
+            : (brightness == Brightness.dark
+                ? const Color(0xFF1E2530)
+                : Colors.grey.shade50);
+    final borderColor =
+        isSelected
+            ? PayRouteColors.vibrantOrange
+            : (brightness == Brightness.dark
+                ? const Color(0xFF2A3441)
+                : Colors.grey.shade200);
 
     return GestureDetector(
       onTap: () => setState(() => _selectedMethod = id),
@@ -899,17 +1319,29 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
             Container(
               padding: EdgeInsets.all(isMobile ? 10 : 12),
               decoration: BoxDecoration(
-                gradient: isSelected
-                    ? const LinearGradient(
-                        colors: [PayRouteColors.vibrantOrange, PayRouteColors.vibrantOrangeDark],
-                      )
-                    : null,
-                color: isSelected ? null : (brightness == Brightness.dark ? const Color(0xFF2A3441) : Colors.grey.shade200),
+                gradient:
+                    isSelected
+                        ? const LinearGradient(
+                          colors: [
+                            PayRouteColors.vibrantOrange,
+                            PayRouteColors.vibrantOrangeDark,
+                          ],
+                        )
+                        : null,
+                color:
+                    isSelected
+                        ? null
+                        : (brightness == Brightness.dark
+                            ? const Color(0xFF2A3441)
+                            : Colors.grey.shade200),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 icon,
-                color: isSelected ? Colors.white : DashboardPalette.textSecondary(brightness),
+                color:
+                    isSelected
+                        ? Colors.white
+                        : DashboardPalette.textSecondary(brightness),
                 size: isMobile ? 20 : 24,
               ),
             ),
@@ -933,10 +1365,16 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
                       ),
                       if (recommended)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [PayRouteColors.vibrantOrange, PayRouteColors.vibrantOrangeDark],
+                              colors: [
+                                PayRouteColors.vibrantOrange,
+                                PayRouteColors.vibrantOrangeDark,
+                              ],
                             ),
                             borderRadius: BorderRadius.circular(4),
                           ),
@@ -967,7 +1405,10 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: isSelected ? PayRouteColors.vibrantOrange : DashboardPalette.textSecondary(brightness),
+                        color:
+                            isSelected
+                                ? PayRouteColors.vibrantOrange
+                                : DashboardPalette.textSecondary(brightness),
                       ),
                     ),
                   ],
@@ -980,7 +1421,10 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: isSelected ? PayRouteColors.vibrantOrange : DashboardPalette.textSecondary(brightness),
+                  color:
+                      isSelected
+                          ? PayRouteColors.vibrantOrange
+                          : DashboardPalette.textSecondary(brightness),
                 ),
               ),
               const SizedBox(width: 8),
@@ -991,14 +1435,23 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected ? PayRouteColors.vibrantOrange : borderColor,
+                  color:
+                      isSelected ? PayRouteColors.vibrantOrange : borderColor,
                   width: 2,
                 ),
-                color: isSelected ? PayRouteColors.vibrantOrange : Colors.transparent,
+                color:
+                    isSelected
+                        ? PayRouteColors.vibrantOrange
+                        : Colors.transparent,
               ),
-              child: isSelected
-                  ? Icon(Icons.check, size: isMobile ? 12 : 14, color: Colors.white)
-                  : null,
+              child:
+                  isSelected
+                      ? Icon(
+                        Icons.check,
+                        size: isMobile ? 12 : 14,
+                        color: Colors.white,
+                      )
+                      : null,
             ),
           ],
         ),
@@ -1006,53 +1459,86 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
     );
   }
 
-  Widget _buildRightPanel(BuildContext context, Brightness brightness, {bool isMobile = false}) {
-    final bgColor = brightness == Brightness.dark
-        ? const Color(0xFF0D1117)
-        : Colors.grey.shade50;
+  Widget _buildRightPanel(
+    BuildContext context,
+    Brightness brightness, {
+    bool isMobile = false,
+    bool scrollable = true,
+  }) {
+    final bgColor =
+        brightness == Brightness.dark
+            ? const Color(0xFF0D1117)
+            : Colors.grey.shade50;
 
-    return Container(
-      color: bgColor,
-      padding: EdgeInsets.all(isMobile ? 16 : 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSummaryCard(brightness),
-          const SizedBox(height: 20),
-          _buildComplianceStatus(brightness),
-          const SizedBox(height: 20),
-          _buildRecentCorridors(brightness),
-          const SizedBox(height: 24),
-          _buildSendButton(brightness),
-          const SizedBox(height: 12),
-          Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final content = Padding(
+          padding: EdgeInsets.all(isMobile ? 16 : 24),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight:
+                  scrollable
+                      ? math.max(
+                        0,
+                        constraints.maxHeight - (isMobile ? 32 : 48),
+                      )
+                      : 0,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.lock, size: 12, color: DashboardPalette.textSecondary(brightness)),
-                const SizedBox(width: 4),
-                Text(
-                  'Bank-grade encryption',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: DashboardPalette.textSecondary(brightness),
+                _buildSummaryCard(brightness),
+                const SizedBox(height: 20),
+                _buildComplianceStatus(brightness),
+                const SizedBox(height: 20),
+                _buildRecentCorridors(brightness),
+                const SizedBox(height: 24),
+                _buildSendButton(brightness),
+                const SizedBox(height: 12),
+                Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.lock,
+                        size: 12,
+                        color: DashboardPalette.textSecondary(brightness),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Bank-grade encryption',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: DashboardPalette.textSecondary(brightness),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-        ],
-      ),
+        );
+
+        if (!scrollable) {
+          return Container(color: bgColor, child: content);
+        }
+
+        return Container(
+          color: bgColor,
+          child: SingleChildScrollView(child: content),
+        );
+      },
     );
   }
 
   Widget _buildSummaryCard(Brightness brightness) {
-    final bgColor = brightness == Brightness.dark
-        ? const Color(0xFF151B23)
-        : Colors.white;
-    final borderColor = brightness == Brightness.dark
-        ? const Color(0xFF2A3441)
-        : Colors.grey.shade200;
+    final bgColor =
+        brightness == Brightness.dark ? const Color(0xFF151B23) : Colors.white;
+    final borderColor =
+        brightness == Brightness.dark
+            ? const Color(0xFF2A3441)
+            : Colors.grey.shade200;
     final corridor = _corridorData[_destinationCurrency]!;
     final rate = _exchangeRates[_destinationCurrency] ?? 1;
     final convertedAmount = _amount * rate;
@@ -1078,9 +1564,21 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
             ),
           ),
           const SizedBox(height: 16),
-          _buildSummaryRow(brightness, 'Amount', '\$${_amount.toStringAsFixed(2)}'),
-          _buildSummaryRow(brightness, 'Fee (${corridor['fee']}%)', '\$${fee.toStringAsFixed(2)}'),
-          _buildSummaryRow(brightness, 'Exchange Rate', '1 $_sourceCurrency = $rate $_destinationCurrency'),
+          _buildSummaryRow(
+            brightness,
+            'Amount',
+            '\$${_amount.toStringAsFixed(2)}',
+          ),
+          _buildSummaryRow(
+            brightness,
+            'Fee (${corridor['fee']}%)',
+            '\$${fee.toStringAsFixed(2)}',
+          ),
+          _buildSummaryRow(
+            brightness,
+            'Exchange Rate',
+            '1 $_sourceCurrency = $rate $_destinationCurrency',
+          ),
           const Divider(height: 24),
           _buildSummaryRow(
             brightness,
@@ -1101,7 +1599,13 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
     );
   }
 
-  Widget _buildSummaryRow(Brightness brightness, String label, String value, {bool isBold = false, bool isHighlighted = false}) {
+  Widget _buildSummaryRow(
+    Brightness brightness,
+    String label,
+    String value, {
+    bool isBold = false,
+    bool isHighlighted = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -1124,9 +1628,10 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
-                color: isHighlighted
-                    ? PayRouteColors.vibrantOrange
-                    : DashboardPalette.textPrimary(brightness),
+                color:
+                    isHighlighted
+                        ? PayRouteColors.vibrantOrange
+                        : DashboardPalette.textPrimary(brightness),
               ),
             ),
           ),
@@ -1136,12 +1641,12 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
   }
 
   Widget _buildComplianceStatus(Brightness brightness) {
-    final bgColor = brightness == Brightness.dark
-        ? const Color(0xFF151B23)
-        : Colors.white;
-    final borderColor = brightness == Brightness.dark
-        ? const Color(0xFF2A3441)
-        : Colors.grey.shade200;
+    final bgColor =
+        brightness == Brightness.dark ? const Color(0xFF151B23) : Colors.white;
+    final borderColor =
+        brightness == Brightness.dark
+            ? const Color(0xFF2A3441)
+            : Colors.grey.shade200;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -1155,7 +1660,11 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
         children: [
           Row(
             children: [
-              const Icon(Icons.verified_user_rounded, color: Colors.green, size: 20),
+              const Icon(
+                Icons.verified_user_rounded,
+                color: Colors.green,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Text(
                 'Compliance Check',
@@ -1177,7 +1686,11 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
     );
   }
 
-  Widget _buildComplianceItem(Brightness brightness, String label, bool passed) {
+  Widget _buildComplianceItem(
+    Brightness brightness,
+    String label,
+    bool passed,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -1185,7 +1698,10 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: passed ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+              color:
+                  passed
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : Colors.red.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -1208,12 +1724,12 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
   }
 
   Widget _buildRecentCorridors(Brightness brightness) {
-    final bgColor = brightness == Brightness.dark
-        ? const Color(0xFF151B23)
-        : Colors.white;
-    final borderColor = brightness == Brightness.dark
-        ? const Color(0xFF2A3441)
-        : Colors.grey.shade200;
+    final bgColor =
+        brightness == Brightness.dark ? const Color(0xFF151B23) : Colors.white;
+    final borderColor =
+        brightness == Brightness.dark
+            ? const Color(0xFF2A3441)
+            : Colors.grey.shade200;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -1243,7 +1759,13 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
     );
   }
 
-  Widget _buildCorridorItem(Brightness brightness, String flag, String code, String name, double rate) {
+  Widget _buildCorridorItem(
+    Brightness brightness,
+    String flag,
+    String code,
+    String name,
+    double rate,
+  ) {
     return GestureDetector(
       onTap: () => setState(() => _destinationCurrency = code),
       child: Container(
@@ -1294,7 +1816,10 @@ class _CrossBorderPageState extends State<CrossBorderPage> with TickerProviderSt
       height: 56,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [PayRouteColors.vibrantOrange, PayRouteColors.vibrantOrangeDark],
+          colors: [
+            PayRouteColors.vibrantOrange,
+            PayRouteColors.vibrantOrangeDark,
+          ],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
@@ -1378,9 +1903,10 @@ class _CorridorPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
+    final paint =
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2;
 
     // Draw the corridor line
     final startX = 70.0;
@@ -1388,14 +1914,11 @@ class _CorridorPainter extends CustomPainter {
     final centerY = size.height / 2;
 
     // Background line
-    paint.color = brightness == Brightness.dark
-        ? const Color(0xFF2A3441)
-        : Colors.grey.shade300;
-    canvas.drawLine(
-      Offset(startX, centerY),
-      Offset(endX, centerY),
-      paint,
-    );
+    paint.color =
+        brightness == Brightness.dark
+            ? const Color(0xFF2A3441)
+            : Colors.grey.shade300;
+    canvas.drawLine(Offset(startX, centerY), Offset(endX, centerY), paint);
 
     // Animated gradient line
     final gradient = LinearGradient(
@@ -1423,9 +1946,10 @@ class _CorridorPainter extends CustomPainter {
     );
 
     // Draw animated dots
-    final dotPaint = Paint()
-      ..color = PayRouteColors.vibrantOrange
-      ..style = PaintingStyle.fill;
+    final dotPaint =
+        Paint()
+          ..color = PayRouteColors.vibrantOrange
+          ..style = PaintingStyle.fill;
 
     final dotX = startX + (endX - startX) * progress;
     canvas.drawCircle(Offset(dotX, centerY), 5, dotPaint);
