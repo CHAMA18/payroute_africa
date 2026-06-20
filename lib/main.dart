@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pendo_sdk/pendo_sdk.dart';
 import 'package:provider/provider.dart';
 import 'package:payroute_desktop/firebase_options.dart';
 import 'package:payroute_desktop/theme.dart';
@@ -32,7 +33,10 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const PayRouteApp());
+
+  await PendoSDK.setup('6b92e378-e843-4c71-b71e-a2630214c8e3', navigationLibrary: NavigationLibrary.GoRouter);
+
+  runApp(PendoActionListener(child: const PayRouteApp()));
 }
 
 class PayRouteApp extends StatefulWidget {

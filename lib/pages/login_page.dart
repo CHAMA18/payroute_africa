@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pendo_sdk/pendo_sdk.dart';
 import 'package:provider/provider.dart';
 import 'package:payroute_desktop/nav.dart';
 import 'package:payroute_desktop/theme.dart';
@@ -148,6 +149,23 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       if (!mounted) return;
 
       if (success) {
+        final userModel = authProvider.userModel;
+        if (userModel != null) {
+          await PendoSDK.startSession(
+            userModel.id,
+            "",
+            {
+              "email": userModel.email,
+              "name": userModel.name ?? "",
+              "phone": userModel.phone ?? "",
+              "accountType": userModel.accountType,
+              "role": userModel.role ?? "",
+              "createdAt": userModel.createdAt.toIso8601String(),
+              "updatedAt": userModel.updatedAt.toIso8601String(),
+            },
+            {},
+          );
+        }
         context.go(AppRoutes.dashboard);
       } else {
         setState(() {
@@ -1272,6 +1290,23 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     if (!mounted) return;
 
     if (success) {
+      final userModel = authProvider.userModel;
+      if (userModel != null) {
+        await PendoSDK.startSession(
+          userModel.id,
+          "",
+          {
+            "email": userModel.email,
+            "name": userModel.name ?? "",
+            "phone": userModel.phone ?? "",
+            "accountType": userModel.accountType,
+            "role": userModel.role ?? "",
+            "createdAt": userModel.createdAt.toIso8601String(),
+            "updatedAt": userModel.updatedAt.toIso8601String(),
+          },
+          {},
+        );
+      }
       context.go(AppRoutes.dashboard);
     } else {
       setState(() {
