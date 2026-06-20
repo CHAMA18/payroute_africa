@@ -25,6 +25,7 @@ import 'package:payroute_desktop/models/account_type.dart';
 import 'package:payroute_desktop/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pendo_sdk/pendo_sdk.dart';
 import 'package:provider/provider.dart';
 
 /// GoRouter configuration for app navigation
@@ -299,7 +300,7 @@ class AppRouter {
         ),
       ),
     ],
-    );
+    )..addPendoListenerToDelegate();
   }
 }
 
